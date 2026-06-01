@@ -8,11 +8,11 @@ type SectionTitleProps = {
   icon?: keyof typeof MaterialCommunityIcons.glyphMap;
 };
 
-export function SectionTitle({ title, subtitle, icon = "sparkles" }: SectionTitleProps) {
+export function SectionTitle({ title, subtitle, icon = "star-four-points-outline" }: SectionTitleProps) {
   return (
     <View style={styles.container}>
       <View style={styles.titleRow}>
-        <MaterialCommunityIcons name={icon} size={22} color={colors.primaryDark} />
+        <MaterialCommunityIcons name={icon} size={17} color={colors.primaryDark} />
         <Text style={styles.title}>{title}</Text>
       </View>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -22,23 +22,23 @@ export function SectionTitle({ title, subtitle, icon = "sparkles" }: SectionTitl
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 26,
-    marginBottom: 12,
+    marginTop: 22,
+    marginBottom: 10,
   },
   titleRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 8,
+    gap: 7,
   },
   title: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "800",
-    letterSpacing: -0.3,
+    letterSpacing: -0.25,
   },
   subtitle: {
     color: colors.muted,
-    fontSize: 13,
+    fontSize: 12.5,
     marginTop: 4,
   },
 });
