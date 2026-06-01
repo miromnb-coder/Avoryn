@@ -24,7 +24,9 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
 
           <View style={styles.hero}>
             <Text style={styles.title}>What are you{`\n`}trying to do?</Text>
-            <AvorynComposer />
+            <View style={styles.composerSlot}>
+              <AvorynComposer />
+            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -64,5 +66,10 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     marginBottom: 58,
     textAlign: "center",
+  },
+  composerSlot: {
+    height: 174,
+    justifyContent: "flex-end",
+    width: "100%",
   },
 });
