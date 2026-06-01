@@ -1,8 +1,14 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AvorynComposer } from "../components/AvorynComposer";
 import { AvorynHeader } from "../components/AvorynHeader";
 import { colors } from "../constants/colors";
+
+const serifFont = Platform.select({
+  ios: "Georgia",
+  android: "serif",
+  default: "serif",
+});
 
 export function AvorynHomeScreen() {
   return (
@@ -26,23 +32,23 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    paddingHorizontal: 28,
-    paddingTop: 10,
+    paddingHorizontal: 27,
+    paddingTop: 8,
   },
   hero: {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    paddingBottom: 104,
+    paddingBottom: 105,
   },
   title: {
     color: colors.text,
-    fontFamily: "serif",
-    fontSize: 43,
+    fontFamily: serifFont,
+    fontSize: 40,
     fontWeight: "400",
-    letterSpacing: -1.35,
-    lineHeight: 51,
-    marginBottom: 59,
+    letterSpacing: -1.15,
+    lineHeight: 48,
+    marginBottom: 58,
     textAlign: "center",
   },
 });
