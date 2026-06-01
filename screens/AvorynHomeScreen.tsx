@@ -1,4 +1,4 @@
-import { ImageBackground, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AvorynComposer } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
@@ -19,22 +19,16 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
       resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoidingView}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={18}
-        >
-          <View style={styles.screen}>
-            <AvorynHeader onMenuPress={onMenuPress} />
+        <View style={styles.screen}>
+          <AvorynHeader onMenuPress={onMenuPress} />
 
-            <View style={styles.hero}>
-              <Text style={styles.title}>What are you{`\n`}trying to do?</Text>
-              <View style={styles.composerSlot}>
-                <AvorynComposer />
-              </View>
+          <View style={styles.hero}>
+            <Text style={styles.title}>What are you{`\n`}trying to do?</Text>
+            <View style={styles.composerSlot}>
+              <AvorynComposer />
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -50,9 +44,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     backgroundColor: "transparent",
-    flex: 1,
-  },
-  keyboardAvoidingView: {
     flex: 1,
   },
   screen: {
