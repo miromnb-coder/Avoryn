@@ -13,6 +13,8 @@ export const AVORYN_COMPOSER_MIN_HEIGHT = CARD_VERTICAL_CHROME + MIN_INPUT_HEIGH
 const APPROX_CHARS_PER_LINE = 31;
 
 type AvorynComposerProps = {
+  onBlur?: () => void;
+  onFocus?: () => void;
   onHeightChange?: (height: number) => void;
   onSend?: (message: string) => void;
 };
@@ -42,7 +44,7 @@ function VoiceWaveIcon() {
   );
 }
 
-export function AvorynComposer({ onHeightChange, onSend }: AvorynComposerProps) {
+export function AvorynComposer({ onBlur, onFocus, onHeightChange, onSend }: AvorynComposerProps) {
   const [message, setMessage] = useState("");
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
 
@@ -90,6 +92,7 @@ export function AvorynComposer({ onHeightChange, onSend }: AvorynComposerProps) 
       <TextInput
         style={inputStyle}
         value={message}
+        onBlur={onBlur}
         onChangeText={updateMessage}
         onContentSizeChange={(event) => {
           const measuredHeight = clamp(
@@ -100,6 +103,7 @@ export function AvorynComposer({ onHeightChange, onSend }: AvorynComposerProps) 
           const estimatedHeight = estimateTextHeight(message);
           setInputHeight(Math.max(measuredHeight, estimatedHeight));
         }}
+        onFocus={onFocus}
         placeholder="Ask Avoryn anything"
         placeholderTextColor={colors.placeholder}
         cursorColor="#7EA0F2"
