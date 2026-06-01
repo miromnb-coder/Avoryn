@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Avoryn",
+    "slug": "avoryn",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "avoryn",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": ["expo-router"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {},
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
