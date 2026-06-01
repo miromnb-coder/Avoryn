@@ -1,4 +1,4 @@
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../constants/colors";
 import { avorynHaptics } from "../utils/avorynHaptics";
@@ -9,13 +9,7 @@ const serifFont = Platform.select({
   default: "serif",
 });
 
-const menuItems = [
-  { icon: "home", label: "Home" },
-  { icon: "scale-balance", label: "Decisions", material: true },
-  { icon: "message-circle", label: "Conversations" },
-  { icon: "bookmark", label: "Saved" },
-  { icon: "settings", label: "Settings" },
-] as const;
+const menuItems = [{ icon: "home", label: "Home" }] as const;
 
 export function AvorynSideMenu() {
   return (
@@ -28,11 +22,7 @@ export function AvorynSideMenu() {
             {menuItems.map((item) => (
               <Pressable key={item.label} style={styles.menuItem} onPress={avorynHaptics.select}>
                 <View style={styles.menuIconWrap}>
-                  {item.material ? (
-                    <MaterialCommunityIcons name={item.icon} size={28} color={colors.text} />
-                  ) : (
-                    <Feather name={item.icon} size={28} color={colors.text} />
-                  )}
+                  <Feather name={item.icon} size={28} color={colors.text} />
                 </View>
                 <Text style={styles.menuLabel}>{item.label}</Text>
               </Pressable>
@@ -99,7 +89,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingRight: 86,
+    paddingRight: 58,
   },
   profilePill: {
     alignItems: "center",
