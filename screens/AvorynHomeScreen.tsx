@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { ImageBackground, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
@@ -11,6 +11,10 @@ const serifFont = Platform.select({
   android: "serif",
   default: "serif",
 });
+
+const CONVERSATION_COMPOSER_BOTTOM = 18;
+const CONVERSATION_COMPOSER_KEYBOARD_GAP = 8;
+const CONVERSATION_MESSAGES_GAP = 0;
 
 type HomeMode = "intro" | "conversation";
 
@@ -28,11 +32,48 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
   const [mode, setMode] = useState<HomeMode>("intro");
   const [messages, setMessages] = useState<AvorynMessage[]>([]);
   const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
+  const [isComposerFocused, setIsComposerFocused] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const composerGrowth = Math.max(0, composerHeight - AVORYN_COMPOSER_MIN_HEIGHT);
+  const conversationComposerBottom = keyboardHeight > 0 ? keyboardHeight + CONVERSATION_COMPOSER_KEYBOARD_GAP : CONVERSATION_COMPOSER_BOTTOM;
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSubscription = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+      setIsComposerFocused(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const titleStyle = useMemo(
     () => [styles.title, { transform: [{ translateY: -composerGrowth }] }],
     [composerGrowth],
+  );
+
+  const messagesScrollStyle = useMemo(
+    () => [
+      styles.messagesScroll,
+      {
+        bottom: conversationComposerBottom + composerHeight + CONVERSATION_MESSAGES_GAP,
+      },
+    ],
+    [composerHeight, conversationComposerBottom],
+  );
+
+  const conversationComposerStyle = useMemo(
+    () => [styles.conversationComposerSlot, { bottom: conversationComposerBottom }],
+    [conversationComposerBottom],
   );
 
   function handleSend(message: string) {
@@ -66,13 +107,18 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
             <View style={styles.hero}>
               <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
               <View style={styles.introComposerSlot}>
-                <AvorynComposer onHeightChange={setComposerHeight} onSend={handleSend} />
+                <AvorynComposer
+                  onBlur={() => setIsComposerFocused(false)}
+                  onFocus={() => setIsComposerFocused(true)}
+                  onHeightChange={setComposerHeight}
+                  onSend={handleSend}
+                />
               </View>
             </View>
           ) : (
             <View style={styles.conversationScreen}>
               <ScrollView
-                style={styles.messagesScroll}
+                style={messagesScrollStyle}
                 contentContainerStyle={styles.messagesContent}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
@@ -94,8 +140,13 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
                 })}
               </ScrollView>
 
-              <View style={styles.conversationComposerSlot}>
-                <AvorynComposer onHeightChange={setComposerHeight} onSend={handleSend} />
+              <View style={conversationComposerStyle}>
+                <AvorynComposer
+                  onBlur={() => setIsComposerFocused(false)}
+                  onFocus={() => setIsComposerFocused(true)}
+                  onHeightChange={setComposerHeight}
+                  onSend={handleSend}
+                />
               </View>
             </View>
           )}
@@ -145,10 +196,13 @@ const styles = StyleSheet.create({
   },
   conversationScreen: {
     flex: 1,
-    paddingTop: 8,
+    position: "relative",
   },
   messagesScroll: {
-    flex: 1,
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 8,
   },
   messagesContent: {
     flexGrow: 1,
@@ -183,9 +237,9 @@ const styles = StyleSheet.create({
     maxWidth: "94%",
   },
   conversationComposerSlot: {
-    justifyContent: "flex-end",
-    minHeight: AVORYN_COMPOSER_MIN_HEIGHT + 18,
-    paddingBottom: 18,
+    left: 0,
+    position: "absolute",
+    right: 0,
     width: "100%",
   },
 });
