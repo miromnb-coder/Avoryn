@@ -2,12 +2,18 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { colors } from "../constants/colors";
 
-export function SearchBox() {
+type SearchBoxProps = {
+  query: string;
+};
+
+export function SearchBox({ query }: SearchBoxProps) {
   return (
     <View>
       <Text style={styles.title}>What are you trying to do?</Text>
       <View style={styles.searchBox}>
-        <Text style={styles.placeholder} numberOfLines={1}>I need a smarter way to get lunch</Text>
+        <Text style={styles.placeholder} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.86}>
+          {query}
+        </Text>
         <View style={styles.actions}>
           <TouchableOpacity activeOpacity={0.7}>
             <MaterialCommunityIcons name="microphone-outline" size={22} color={colors.text} />
