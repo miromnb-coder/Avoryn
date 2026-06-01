@@ -11,9 +11,6 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="nearby" />
-      <Tabs.Screen name="scan" />
-      <Tabs.Screen name="profile" />
     </Tabs>
   );
 }
