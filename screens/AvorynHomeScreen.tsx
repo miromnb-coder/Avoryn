@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   messagesContent: {
     flexGrow: 1,
     justifyContent: "flex-end",
-    paddingBottom: 4,
+    paddingBottom: 0,
     paddingTop: 4,
   },
   userMessageWrap: {
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   conversationComposerSlot: {
     justifyContent: "flex-end",
-    minHeight: 174,
+    minHeight: AVORYN_COMPOSER_MIN_HEIGHT + 18,
     paddingBottom: 18,
     width: "100%",
   },
