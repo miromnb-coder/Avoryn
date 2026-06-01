@@ -7,14 +7,14 @@ export function SearchBox() {
     <View>
       <Text style={styles.title}>What are you trying to do?</Text>
       <View style={styles.searchBox}>
-        <Text style={styles.placeholder}>I need a smarter way to get lunch</Text>
+        <Text style={styles.placeholder} numberOfLines={1}>I need a smarter way to get lunch</Text>
         <View style={styles.actions}>
           <TouchableOpacity activeOpacity={0.7}>
-            <MaterialCommunityIcons name="microphone-outline" size={23} color={colors.text} />
+            <MaterialCommunityIcons name="microphone-outline" size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.divider} />
           <TouchableOpacity activeOpacity={0.7}>
-            <MaterialCommunityIcons name="line-scan" size={24} color={colors.text} />
+            <MaterialCommunityIcons name="line-scan" size={23} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -25,9 +25,9 @@ export function SearchBox() {
 const styles = StyleSheet.create({
   title: {
     color: colors.primaryDark,
-    fontSize: 27,
+    fontSize: 24,
     fontWeight: "800",
-    letterSpacing: -0.7,
+    letterSpacing: -0.65,
     marginBottom: 14,
   },
   searchBox: {
@@ -39,8 +39,8 @@ const styles = StyleSheet.create({
     elevation: 2,
     flexDirection: "row",
     justifyContent: "space-between",
-    minHeight: 58,
-    paddingHorizontal: 18,
+    minHeight: 52,
+    paddingHorizontal: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.06,
@@ -49,17 +49,18 @@ const styles = StyleSheet.create({
   placeholder: {
     color: colors.text,
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
+    fontWeight: "500",
   },
   actions: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 14,
+    gap: 12,
     marginLeft: 12,
   },
   divider: {
     backgroundColor: colors.border,
-    height: 28,
+    height: 26,
     width: 1,
   },
 });
