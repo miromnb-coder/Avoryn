@@ -1,12 +1,18 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { colors } from "../constants/colors";
+
+const serifFont = Platform.select({
+  ios: "Georgia",
+  android: "serif",
+  default: "serif",
+});
 
 export function AvorynHeader() {
   return (
     <View style={styles.header}>
       <TouchableOpacity style={styles.menuButton} activeOpacity={0.68}>
-        <MaterialCommunityIcons name="menu" size={29} color={colors.text} />
+        <MaterialCommunityIcons name="menu" size={25} color={colors.text} />
       </TouchableOpacity>
 
       <Text style={styles.logo}>Avoryn</Text>
@@ -21,24 +27,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    minHeight: 56,
+    minHeight: 54,
     width: "100%",
   },
   menuButton: {
     alignItems: "center",
-    height: 44,
+    height: 42,
     justifyContent: "center",
-    width: 44,
+    width: 42,
   },
   logo: {
     color: colors.text,
-    fontFamily: "serif",
-    fontSize: 31,
-    fontWeight: "500",
-    letterSpacing: -0.4,
+    fontFamily: serifFont,
+    fontSize: 28,
+    fontWeight: "400",
+    letterSpacing: -0.3,
   },
   rightSpacer: {
-    height: 44,
-    width: 44,
+    height: 42,
+    width: 42,
   },
 });
