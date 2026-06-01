@@ -2,16 +2,20 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { colors } from "../constants/colors";
 
+type AvorynHeaderProps = {
+  onMenuPress?: () => void;
+};
+
 const serifFont = Platform.select({
   ios: "Georgia",
   android: "serif",
   default: "serif",
 });
 
-export function AvorynHeader() {
+export function AvorynHeader({ onMenuPress }: AvorynHeaderProps) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.menuButton} activeOpacity={0.68}>
+      <TouchableOpacity style={styles.menuButton} activeOpacity={0.68} onPress={onMenuPress}>
         <MaterialCommunityIcons name="menu" size={25} color={colors.text} />
       </TouchableOpacity>
 
