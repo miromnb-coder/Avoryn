@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { colors } from "../constants/colors";
 import { avorynHaptics } from "../utils/avorynHaptics";
@@ -9,8 +9,12 @@ const MIN_INPUT_HEIGHT = 28;
 const MAX_VISIBLE_LINES = 4;
 const MAX_INPUT_HEIGHT = INPUT_LINE_HEIGHT * MAX_VISIBLE_LINES;
 const CARD_VERTICAL_CHROME = 16 + 15 + 44 + 11;
-const MIN_CARD_HEIGHT = CARD_VERTICAL_CHROME + MIN_INPUT_HEIGHT;
+export const AVORYN_COMPOSER_MIN_HEIGHT = CARD_VERTICAL_CHROME + MIN_INPUT_HEIGHT;
 const APPROX_CHARS_PER_LINE = 31;
+
+type AvorynComposerProps = {
+  onHeightChange?: (height: number) => void;
+};
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -37,16 +41,21 @@ function VoiceWaveIcon() {
   );
 }
 
-export function AvorynComposer() {
+export function AvorynComposer({ onHeightChange }: AvorynComposerProps) {
   const [message, setMessage] = useState("");
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
 
   const trimmedMessage = message.trim();
   const hasMessage = trimmedMessage.length > 0;
+  const composerHeight = CARD_VERTICAL_CHROME + inputHeight;
+
+  useEffect(() => {
+    onHeightChange?.(composerHeight);
+  }, [composerHeight, onHeightChange]);
 
   const cardStyle = useMemo(
-    () => [styles.card, { height: CARD_VERTICAL_CHROME + inputHeight }],
-    [inputHeight],
+    () => [styles.card, { height: composerHeight }],
+    [composerHeight],
   );
 
   const inputStyle = useMemo(
@@ -121,7 +130,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(24,27,26,0.045)",
     borderRadius: 28,
     borderWidth: 1,
-    minHeight: MIN_CARD_HEIGHT,
+    minHeight: AVORYN_COMPOSER_MIN_HEIGHT,
     paddingBottom: 11,
     paddingHorizontal: 21,
     paddingTop: 16,
