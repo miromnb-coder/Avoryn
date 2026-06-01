@@ -6,7 +6,7 @@ export function ScanCallout() {
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.78}>
       <View style={styles.iconWrap}>
-        <MaterialCommunityIcons name="barcode-scan" size={30} color={colors.primaryDark} />
+        <MaterialCommunityIcons name="barcode-scan" size={25} color={colors.primaryDark} />
       </View>
 
       <View style={styles.content}>
@@ -15,7 +15,7 @@ export function ScanCallout() {
       </View>
 
       <View style={styles.button}>
-        <MaterialCommunityIcons name="arrow-right" size={28} color={colors.card} />
+        <MaterialCommunityIcons name="arrow-right" size={25} color={colors.card} />
       </View>
     </TouchableOpacity>
   );
@@ -26,43 +26,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.card,
     borderColor: colors.border,
-    borderRadius: 22,
+    borderRadius: 20,
     borderWidth: 1,
     flexDirection: "row",
-    gap: 14,
-    marginTop: 18,
-    padding: 14,
+    gap: 12,
+    marginTop: 12,
+    padding: 11,
   },
   iconWrap: {
     alignItems: "center",
     backgroundColor: colors.background,
     borderColor: colors.border,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    height: 62,
+    height: 54,
     justifyContent: "center",
-    width: 62,
+    width: 54,
   },
   content: {
     flex: 1,
+    minWidth: 0,
   },
   title: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   subtitle: {
     color: colors.muted,
-    fontSize: 13.5,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 17,
   },
   button: {
     alignItems: "center",
     backgroundColor: colors.primaryDark,
     borderRadius: 999,
-    height: 54,
+    height: 48,
     justifyContent: "center",
-    width: 54,
+    width: 48,
   },
 });
