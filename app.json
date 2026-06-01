@@ -9,9 +9,15 @@
     "newArchEnabled": true,
     "plugins": ["expo-router"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Avoryn uses the camera to scan products before you buy.",
+        "NSLocationWhenInUseUsageDescription": "Avoryn uses your location to show useful places and better options near you."
+      }
     },
-    "android": {},
+    "android": {
+      "permissions": ["CAMERA", "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+    },
     "web": {
       "bundler": "metro"
     }
