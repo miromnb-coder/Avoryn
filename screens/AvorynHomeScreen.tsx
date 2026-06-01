@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ImageBackground, Keyboard, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
 import { AvorynHeader } from "../components/AvorynHeader";
 import { AvorynTypewriterTitle } from "../components/AvorynTypewriterTitle";
 import { colors } from "../constants/colors";
+
+const serifFont = Platform.select({
+  ios: "Georgia",
+  android: "serif",
+  default: "serif",
+});
 
 const CONVERSATION_COMPOSER_BOTTOM = 18;
 const CONVERSATION_COMPOSER_KEYBOARD_GAP = 8;
@@ -255,7 +261,7 @@ const styles = StyleSheet.create({
   },
   avorynMessageText: {
     color: colors.text,
-    fontFamily: Platform.select({ ios: "Georgia", android: "serif", default: "serif" }),
+    fontFamily: serifFont,
     fontSize: 25,
     fontWeight: "400",
     letterSpacing: -0.45,
