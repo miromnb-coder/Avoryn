@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.045,
     shadowRadius: 18,
-    width: "86%",
+    width: "100%",
   },
   input: {
     color: colors.text,
