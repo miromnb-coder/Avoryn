@@ -14,6 +14,7 @@ const APPROX_CHARS_PER_LINE = 31;
 
 type AvorynComposerProps = {
   onHeightChange?: (height: number) => void;
+  onSend?: (message: string) => void;
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -41,7 +42,7 @@ function VoiceWaveIcon() {
   );
 }
 
-export function AvorynComposer({ onHeightChange }: AvorynComposerProps) {
+export function AvorynComposer({ onHeightChange, onSend }: AvorynComposerProps) {
   const [message, setMessage] = useState("");
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
 
@@ -68,6 +69,11 @@ export function AvorynComposer({ onHeightChange }: AvorynComposerProps) {
     setInputHeight(estimateTextHeight(nextMessage));
   }
 
+  function resetComposer() {
+    setMessage("");
+    setInputHeight(MIN_INPUT_HEIGHT);
+  }
+
   function handleSend() {
     if (!hasMessage) {
       avorynHaptics.select();
@@ -75,8 +81,8 @@ export function AvorynComposer({ onHeightChange }: AvorynComposerProps) {
     }
 
     avorynHaptics.success();
-    setMessage("");
-    setInputHeight(MIN_INPUT_HEIGHT);
+    onSend?.(trimmedMessage);
+    resetComposer();
   }
 
   return (
