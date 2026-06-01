@@ -1,6 +1,7 @@
+import { useMemo, useState } from "react";
 import { ImageBackground, Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AvorynComposer } from "../components/AvorynComposer";
+import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
 import { AvorynHeader } from "../components/AvorynHeader";
 import { colors } from "../constants/colors";
@@ -12,6 +13,14 @@ const serifFont = Platform.select({
 });
 
 function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
+  const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
+  const composerGrowth = Math.max(0, composerHeight - AVORYN_COMPOSER_MIN_HEIGHT);
+
+  const titleStyle = useMemo(
+    () => [styles.title, { transform: [{ translateY: -composerGrowth }] }],
+    [composerGrowth],
+  );
+
   return (
     <ImageBackground
       source={require("../assets/backgrounds/avoryn-background.PNG")}
@@ -23,9 +32,9 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
           <AvorynHeader onMenuPress={onMenuPress} />
 
           <View style={styles.hero}>
-            <Text style={styles.title}>What are you{`\n`}trying to do?</Text>
+            <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
             <View style={styles.composerSlot}>
-              <AvorynComposer />
+              <AvorynComposer onHeightChange={setComposerHeight} />
             </View>
           </View>
         </View>
@@ -64,7 +73,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     letterSpacing: -1.15,
     lineHeight: 48,
-    marginBottom: 58,
+    marginBottom: 24,
     textAlign: "center",
   },
   composerSlot: {
