@@ -32,14 +32,14 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    paddingHorizontal: 27,
-    paddingTop: 8,
+    paddingHorizontal: 26,
+    paddingTop: 0,
   },
   hero: {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    paddingBottom: 105,
+    paddingBottom: 104,
   },
   title: {
     color: colors.text,
