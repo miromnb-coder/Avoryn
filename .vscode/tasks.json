@@ -2,6 +2,17 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Avoryn: Clean broken install",
+      "type": "shell",
+      "command": "rm -rf node_modules package-lock.json",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
       "label": "Avoryn: 1) Install dependencies",
       "type": "shell",
       "command": "npm install",
