@@ -37,7 +37,8 @@ export function AvorynTypewriterTitle({ active = true, textStyle }: AvorynTypewr
 
   const currentPhrase = TITLE_PHRASES[phraseIndex];
   const visibleText = currentPhrase.slice(0, visibleLength);
-  const cursorStyle = cursorVisible && active ? styles.cursorVisible : styles.cursorHidden;
+  const isTextComplete = visibleLength === currentPhrase.length && phase === "holding";
+  const cursorStyle = cursorVisible && active && isTextComplete ? styles.cursorVisible : styles.cursorHidden;
 
   useEffect(() => {
     if (!active) {
