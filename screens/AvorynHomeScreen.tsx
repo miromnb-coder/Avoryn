@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Keyboard, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
 import { AvorynHeader } from "../components/AvorynHeader";
+import { AvorynTypewriterTitle } from "../components/AvorynTypewriterTitle";
 import { colors } from "../constants/colors";
-
-const serifFont = Platform.select({
-  ios: "Georgia",
-  android: "serif",
-  default: "serif",
-});
 
 const CONVERSATION_COMPOSER_BOTTOM = 18;
 const CONVERSATION_COMPOSER_KEYBOARD_GAP = 8;
@@ -73,7 +68,7 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
   }, []);
 
   const titleStyle = useMemo(
-    () => [styles.title, { transform: [{ translateY: -composerGrowth }] }, mode === "transitioning" && styles.titleHidden],
+    () => [{ transform: [{ translateY: -composerGrowth }] }, mode === "transitioning" && styles.titleHidden],
     [composerGrowth, mode],
   );
 
@@ -144,7 +139,7 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
 
           {mode !== "conversation" ? (
             <View style={styles.hero}>
-              <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
+              <AvorynTypewriterTitle active={mode === "intro" && !isComposerFocused} textStyle={titleStyle} />
               <View style={styles.introComposerSlot}>
                 <AvorynComposer
                   onBlur={() => setIsComposerFocused(false)}
@@ -218,16 +213,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingBottom: 138,
   },
-  title: {
-    color: colors.text,
-    fontFamily: serifFont,
-    fontSize: 40,
-    fontWeight: "400",
-    letterSpacing: -1.15,
-    lineHeight: 48,
-    marginBottom: 24,
-    textAlign: "center",
-  },
   titleHidden: {
     opacity: 0,
   },
@@ -270,7 +255,7 @@ const styles = StyleSheet.create({
   },
   avorynMessageText: {
     color: colors.text,
-    fontFamily: serifFont,
+    fontFamily: Platform.select({ ios: "Georgia", android: "serif", default: "serif" }),
     fontSize: 25,
     fontWeight: "400",
     letterSpacing: -0.45,
