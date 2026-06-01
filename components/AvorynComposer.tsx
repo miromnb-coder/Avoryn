@@ -12,6 +12,18 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function VoiceWaveIcon() {
+  return (
+    <View style={styles.waveIcon}>
+      <View style={[styles.waveBar, styles.waveBarShort]} />
+      <View style={[styles.waveBar, styles.waveBarMedium]} />
+      <View style={[styles.waveBar, styles.waveBarTall]} />
+      <View style={[styles.waveBar, styles.waveBarMedium]} />
+      <View style={[styles.waveBar, styles.waveBarShort]} />
+    </View>
+  );
+}
+
 export function AvorynComposer() {
   const [message, setMessage] = useState("");
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
@@ -63,11 +75,11 @@ export function AvorynComposer() {
           activeOpacity={0.68}
           onPress={handleSend}
         >
-          <MaterialCommunityIcons
-            name={hasMessage ? "arrow-up" : "waveform"}
-            size={hasMessage ? 20 : 26}
-            color={hasMessage ? "#FFFFFF" : colors.text}
-          />
+          {hasMessage ? (
+            <MaterialCommunityIcons name="arrow-up" size={20} color="#FFFFFF" />
+          ) : (
+            <VoiceWaveIcon />
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -123,5 +135,27 @@ const styles = StyleSheet.create({
   sendButton: {
     backgroundColor: colors.text,
     borderRadius: 999,
+  },
+  waveIcon: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 3,
+    height: 28,
+    justifyContent: "center",
+    width: 30,
+  },
+  waveBar: {
+    backgroundColor: colors.text,
+    borderRadius: 999,
+    width: 3,
+  },
+  waveBarShort: {
+    height: 13,
+  },
+  waveBarMedium: {
+    height: 21,
+  },
+  waveBarTall: {
+    height: 27,
   },
 });
