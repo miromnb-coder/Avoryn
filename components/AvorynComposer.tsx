@@ -6,12 +6,23 @@ import { avorynHaptics } from "../utils/avorynHaptics";
 
 const INPUT_LINE_HEIGHT = 22;
 const MIN_INPUT_HEIGHT = 28;
-const MAX_INPUT_HEIGHT = INPUT_LINE_HEIGHT * 4;
+const MAX_VISIBLE_LINES = 4;
+const MAX_INPUT_HEIGHT = INPUT_LINE_HEIGHT * MAX_VISIBLE_LINES;
 const CARD_VERTICAL_CHROME = 16 + 15 + 44 + 11;
 const MIN_CARD_HEIGHT = CARD_VERTICAL_CHROME + MIN_INPUT_HEIGHT;
+const APPROX_CHARS_PER_LINE = 31;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function estimateTextHeight(text: string) {
+  const lines = text.length === 0 ? [""] : text.split("\n");
+  const estimatedLineCount = lines.reduce((total, line) => {
+    return total + Math.max(1, Math.ceil(line.length / APPROX_CHARS_PER_LINE));
+  }, 0);
+
+  return clamp(estimatedLineCount * INPUT_LINE_HEIGHT, MIN_INPUT_HEIGHT, MAX_INPUT_HEIGHT);
 }
 
 function VoiceWaveIcon() {
@@ -43,6 +54,11 @@ export function AvorynComposer() {
     [inputHeight],
   );
 
+  function updateMessage(nextMessage: string) {
+    setMessage(nextMessage);
+    setInputHeight(estimateTextHeight(nextMessage));
+  }
+
   function handleSend() {
     if (!hasMessage) {
       avorynHaptics.select();
@@ -59,14 +75,15 @@ export function AvorynComposer() {
       <TextInput
         style={inputStyle}
         value={message}
-        onChangeText={setMessage}
+        onChangeText={updateMessage}
         onContentSizeChange={(event) => {
-          const nextHeight = clamp(
+          const measuredHeight = clamp(
             Math.ceil(event.nativeEvent.contentSize.height),
             MIN_INPUT_HEIGHT,
             MAX_INPUT_HEIGHT,
           );
-          setInputHeight(nextHeight);
+          const estimatedHeight = estimateTextHeight(message);
+          setInputHeight(Math.max(measuredHeight, estimatedHeight));
         }}
         placeholder="Ask Avoryn anything"
         placeholderTextColor={colors.placeholder}
@@ -120,6 +137,7 @@ const styles = StyleSheet.create({
     lineHeight: INPUT_LINE_HEIGHT,
     margin: 0,
     padding: 0,
+    width: "100%",
   },
   actionRow: {
     alignItems: "center",
