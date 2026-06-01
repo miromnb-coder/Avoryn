@@ -8,6 +8,10 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "plugins": ["expo-router"],
+    "splash": {
+      "backgroundColor": "#F5F8F2",
+      "resizeMode": "cover"
+    },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
