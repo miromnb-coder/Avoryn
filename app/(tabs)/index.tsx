@@ -56,15 +56,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: 32,
+    paddingBottom: 22,
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 8,
   },
   chipRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 9,
-    marginTop: 16,
+    gap: 8,
+    marginTop: 14,
   },
   nearbyHeader: {
     alignItems: "flex-end",
@@ -73,12 +72,12 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     color: colors.muted,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
-    marginBottom: 16,
+    marginBottom: 14,
   },
   nearbyCards: {
     flexDirection: "row",
-    gap: 10,
+    gap: 9,
   },
 });
