@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AvorynComposer } from "../components/AvorynComposer";
 import { AvorynHeader } from "../components/AvorynHeader";
@@ -12,22 +12,31 @@ const serifFont = Platform.select({
 
 export function AvorynHomeScreen() {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.screen}>
-        <AvorynHeader />
+    <ImageBackground
+      source={require("../assets/backgrounds/avoryn-background.PNG")}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.screen}>
+          <AvorynHeader />
 
-        <View style={styles.hero}>
-          <Text style={styles.title}>What are you{`\n`}trying to do?</Text>
-          <AvorynComposer />
+          <View style={styles.hero}>
+            <Text style={styles.title}>What are you{`\n`}trying to do?</Text>
+            <AvorynComposer />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
   safeArea: {
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
     flex: 1,
   },
   screen: {
