@@ -6,12 +6,12 @@ export function SavingsPill() {
   return (
     <TouchableOpacity style={styles.container} activeOpacity={0.75}>
       <View style={styles.iconWrap}>
-        <MaterialCommunityIcons name="tag-outline" size={19} color={colors.primary} />
+        <MaterialCommunityIcons name="tag-outline" size={17} color={colors.primary} />
       </View>
       <Text style={styles.text}>
         You saved <Text style={styles.amount}>€24</Text> this week
       </Text>
-      <MaterialCommunityIcons name="chevron-right" size={24} color={colors.muted} />
+      <MaterialCommunityIcons name="chevron-right" size={22} color={colors.muted} />
     </TouchableOpacity>
   );
 }
@@ -24,23 +24,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     flexDirection: "row",
-    marginTop: 18,
+    marginTop: 14,
     minHeight: 48,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
   iconWrap: {
     alignItems: "center",
     backgroundColor: colors.mint,
     borderRadius: 12,
-    height: 34,
+    height: 32,
     justifyContent: "center",
     marginRight: 12,
-    width: 34,
+    width: 32,
   },
   text: {
     color: colors.text,
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "600",
   },
   amount: {
