@@ -12,7 +12,7 @@ type CategoryChipProps = {
 export function CategoryChip({ label, icon }: CategoryChipProps) {
   return (
     <TouchableOpacity style={styles.chip} activeOpacity={0.75}>
-      <MaterialCommunityIcons name={icon} size={20} color={colors.primary} />
+      <MaterialCommunityIcons name={icon} size={17} color={colors.primary} />
       <Text style={styles.label}>{label}</Text>
     </TouchableOpacity>
   );
@@ -23,17 +23,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.card,
     borderColor: colors.border,
-    borderRadius: 16,
+    borderRadius: 15,
     borderWidth: 1,
+    flexBasis: "23.5%",
     flexDirection: "row",
-    gap: 7,
-    minHeight: 48,
-    paddingHorizontal: 12,
+    gap: 5,
+    height: 46,
+    justifyContent: "center",
+    paddingHorizontal: 7,
   },
   label: {
     color: colors.text,
-    fontSize: 12,
+    flexShrink: 1,
+    fontSize: 10.5,
     fontWeight: "700",
-    lineHeight: 15,
+    lineHeight: 13,
   },
 });
