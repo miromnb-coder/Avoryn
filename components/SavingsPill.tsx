@@ -2,14 +2,38 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { colors } from "../constants/colors";
 
-export function SavingsPill() {
+type SavingsPillProps = {
+  text: string;
+};
+
+function highlightValue(text: string) {
+  const match = text.match(/€\d+|\d+\s[a-zA-Z]+/);
+
+  if (!match || match.index === undefined) {
+    return <Text>{text}</Text>;
+  }
+
+  const before = text.slice(0, match.index);
+  const value = match[0];
+  const after = text.slice(match.index + value.length);
+
+  return (
+    <>
+      {before}
+      <Text style={styles.amount}>{value}</Text>
+      {after}
+    </>
+  );
+}
+
+export function SavingsPill({ text }: SavingsPillProps) {
   return (
     <TouchableOpacity style={styles.container} activeOpacity={0.75}>
       <View style={styles.iconWrap}>
         <MaterialCommunityIcons name="tag-outline" size={17} color={colors.primary} />
       </View>
-      <Text style={styles.text}>
-        You saved <Text style={styles.amount}>€24</Text> this week
+      <Text style={styles.text} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.88}>
+        {highlightValue(text)}
       </Text>
       <MaterialCommunityIcons name="chevron-right" size={22} color={colors.muted} />
     </TouchableOpacity>
