@@ -1,21 +1,5 @@
-import { StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../../constants/colors";
+import { AvorynHomeScreen } from "../../screens/AvorynHomeScreen";
 
 export default function AskScreen() {
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.blank} />
-    </SafeAreaView>
-  );
+  return <AvorynHomeScreen />;
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.background,
-    flex: 1,
-  },
-  blank: {
-    flex: 1,
-  },
-});
