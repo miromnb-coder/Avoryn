@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { Image } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const backgroundImage = require("../assets/backgrounds/avoryn-background.PNG");
 
@@ -33,7 +34,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="dark" backgroundColor="transparent" translucent />
       <Stack
         screenOptions={{
@@ -41,6 +42,6 @@ export default function RootLayout() {
           headerShown: false,
         }}
       />
-    </>
+    </GestureHandlerRootView>
   );
 }
