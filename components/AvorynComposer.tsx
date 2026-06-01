@@ -7,6 +7,8 @@ import { avorynHaptics } from "../utils/avorynHaptics";
 const INPUT_LINE_HEIGHT = 22;
 const MIN_INPUT_HEIGHT = 28;
 const MAX_INPUT_HEIGHT = INPUT_LINE_HEIGHT * 4;
+const CARD_VERTICAL_CHROME = 16 + 15 + 44 + 11;
+const MIN_CARD_HEIGHT = CARD_VERTICAL_CHROME + MIN_INPUT_HEIGHT;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -31,6 +33,11 @@ export function AvorynComposer() {
   const trimmedMessage = message.trim();
   const hasMessage = trimmedMessage.length > 0;
 
+  const cardStyle = useMemo(
+    () => [styles.card, { height: CARD_VERTICAL_CHROME + inputHeight }],
+    [inputHeight],
+  );
+
   const inputStyle = useMemo(
     () => [styles.input, { height: inputHeight }],
     [inputHeight],
@@ -48,13 +55,17 @@ export function AvorynComposer() {
   }
 
   return (
-    <View style={styles.card}>
+    <View style={cardStyle}>
       <TextInput
         style={inputStyle}
         value={message}
         onChangeText={setMessage}
         onContentSizeChange={(event) => {
-          const nextHeight = clamp(event.nativeEvent.contentSize.height, MIN_INPUT_HEIGHT, MAX_INPUT_HEIGHT);
+          const nextHeight = clamp(
+            Math.ceil(event.nativeEvent.contentSize.height),
+            MIN_INPUT_HEIGHT,
+            MAX_INPUT_HEIGHT,
+          );
           setInputHeight(nextHeight);
         }}
         placeholder="Ask Avoryn anything"
@@ -93,7 +104,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(24,27,26,0.045)",
     borderRadius: 28,
     borderWidth: 1,
-    minHeight: 104,
+    minHeight: MIN_CARD_HEIGHT,
     paddingBottom: 11,
     paddingHorizontal: 21,
     paddingTop: 16,
