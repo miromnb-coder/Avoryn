@@ -53,6 +53,18 @@
       }
     },
     {
+      "label": "Avoryn: Start Expo tunnel clear cache",
+      "type": "shell",
+      "command": "npx expo start --tunnel -c",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
       "label": "Avoryn: Start Expo with cleared cache",
       "type": "shell",
       "command": "npm run start:clear",
