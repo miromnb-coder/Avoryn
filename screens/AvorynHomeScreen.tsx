@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
 import { AvorynHeader } from "../components/AvorynHeader";
@@ -29,13 +29,18 @@ function createDemoAnswer(userMessage: string) {
 }
 
 function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
+  const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<HomeMode>("intro");
   const [messages, setMessages] = useState<AvorynMessage[]>([]);
   const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
   const [isComposerFocused, setIsComposerFocused] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const composerGrowth = Math.max(0, composerHeight - AVORYN_COMPOSER_MIN_HEIGHT);
-  const conversationComposerBottom = keyboardHeight > 0 ? keyboardHeight + CONVERSATION_COMPOSER_KEYBOARD_GAP : CONVERSATION_COMPOSER_BOTTOM;
+  const keyboardComposerBottom = Math.max(
+    CONVERSATION_COMPOSER_KEYBOARD_GAP,
+    keyboardHeight - insets.bottom + CONVERSATION_COMPOSER_KEYBOARD_GAP,
+  );
+  const conversationComposerBottom = keyboardHeight > 0 ? keyboardComposerBottom : CONVERSATION_COMPOSER_BOTTOM;
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
