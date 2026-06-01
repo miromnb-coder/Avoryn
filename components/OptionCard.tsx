@@ -20,27 +20,36 @@ const toneColors = {
 };
 
 export function OptionCard({ title, description, detail, action, icon, tone }: OptionCardProps) {
-  const isPrimary = action === "Go";
+  const isPrimary = action === "Go" || action === "View" || action === "Scan";
 
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.78}>
       <View style={[styles.iconWrap, { backgroundColor: toneColors[tone] }]}>
-        <MaterialCommunityIcons name={icon} size={25} color={colors.primaryDark} />
+        <MaterialCommunityIcons name={icon} size={24} color={colors.primaryDark} />
       </View>
 
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description} numberOfLines={1}>{description}</Text>
-        <Text style={styles.detail} numberOfLines={1}>{detail}</Text>
+        <Text style={styles.description} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
+          {description}
+        </Text>
+        <Text style={styles.detail} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.86}>
+          {detail}
+        </Text>
       </View>
 
       <View style={styles.rightSide}>
         <View style={[styles.actionButton, isPrimary ? styles.primaryAction : styles.secondaryAction]}>
-          <Text style={[styles.actionText, isPrimary ? styles.primaryActionText : styles.secondaryActionText]}>
+          <Text
+            style={[styles.actionText, isPrimary ? styles.primaryActionText : styles.secondaryActionText]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
+          >
             {action}
           </Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.muted} />
+        <MaterialCommunityIcons name="chevron-right" size={18} color={colors.muted} />
       </View>
     </TouchableOpacity>
   );
@@ -56,7 +65,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     flexDirection: "row",
     marginBottom: 8,
-    minHeight: 78,
+    minHeight: 76,
     padding: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
@@ -66,10 +75,10 @@ const styles = StyleSheet.create({
   iconWrap: {
     alignItems: "center",
     borderRadius: 14,
-    height: 54,
+    height: 52,
     justifyContent: "center",
     marginRight: 12,
-    width: 54,
+    width: 52,
   },
   content: {
     flex: 1,
@@ -77,33 +86,33 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "800",
     marginBottom: 2,
   },
   description: {
     color: colors.text,
-    fontSize: 12.8,
-    fontWeight: "600",
+    fontSize: 12.4,
+    fontWeight: "650",
   },
   detail: {
     color: colors.muted,
-    fontSize: 11.5,
+    fontSize: 11.2,
     marginTop: 3,
   },
   rightSide: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 4,
-    marginLeft: 7,
+    gap: 3,
+    marginLeft: 6,
   },
   actionButton: {
     alignItems: "center",
     borderRadius: 999,
     justifyContent: "center",
-    minHeight: 34,
-    minWidth: 56,
-    paddingHorizontal: 12,
+    minHeight: 32,
+    minWidth: 54,
+    paddingHorizontal: 10,
   },
   primaryAction: {
     backgroundColor: colors.primaryDark,
@@ -114,7 +123,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   actionText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: "800",
   },
   primaryActionText: {
