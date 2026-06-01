@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingRight: 86,
   },
   profilePill: {
     alignItems: "center",
