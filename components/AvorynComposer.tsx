@@ -139,23 +139,23 @@ const styles = StyleSheet.create({
   waveIcon: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 3,
-    height: 28,
+    gap: 2.5,
+    height: 22,
     justifyContent: "center",
-    width: 30,
+    width: 23,
   },
   waveBar: {
     backgroundColor: colors.text,
     borderRadius: 999,
-    width: 3,
+    width: 2.25,
   },
   waveBarShort: {
-    height: 13,
+    height: 10,
   },
   waveBarMedium: {
-    height: 21,
+    height: 16,
   },
   waveBarTall: {
-    height: 27,
+    height: 21,
   },
 });
