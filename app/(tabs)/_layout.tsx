@@ -9,20 +9,24 @@ function TabIcon({ name, color, focused }: { name: keyof typeof MaterialCommunit
       <View
         style={{
           alignItems: "center",
-          backgroundColor: focused ? colors.primary : colors.primaryDark,
+          backgroundColor: colors.primaryDark,
           borderRadius: 999,
           height: 54,
           justifyContent: "center",
-          marginBottom: 12,
+          marginBottom: 14,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.16,
+          shadowRadius: 9,
           width: 54,
         }}
       >
-        <MaterialCommunityIcons name={name} size={26} color={colors.card} />
+        <MaterialCommunityIcons name={name} size={25} color={colors.card} />
       </View>
     );
   }
 
-  return <MaterialCommunityIcons name={name} size={25} color={color} />;
+  return <MaterialCommunityIcons name={name} size={24} color={color} />;
 }
 
 export default function TabsLayout() {
@@ -40,9 +44,9 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: 86,
-          paddingBottom: 18,
-          paddingTop: 10,
+          height: 84,
+          paddingBottom: 17,
+          paddingTop: 9,
         },
       }}
     >
