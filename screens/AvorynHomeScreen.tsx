@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   conversationScreen: {
     flex: 1,
-    paddingTop: 34,
+    paddingTop: 8,
   },
   messagesScroll: {
     flex: 1,
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
   messagesContent: {
     flexGrow: 1,
     justifyContent: "flex-end",
-    paddingBottom: 26,
-    paddingTop: 24,
+    paddingBottom: 4,
+    paddingTop: 4,
   },
   userMessageWrap: {
     alignSelf: "flex-end",
