@@ -4,11 +4,34 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MapPreview } from "../../components/MapPreview";
 import { NearbyCard } from "../../components/NearbyCard";
 import { colors } from "../../constants/colors";
-import { nearbyPlaces } from "../../constants/mockData";
+import { usePlaces } from "../../hooks/usePlaces";
 import { useUserLocation } from "../../hooks/useUserLocation";
+import { Place } from "../../lib/supabase";
+
+const placeIconMap: Record<Place["type"], keyof typeof MaterialCommunityIcons.glyphMap> = {
+  food: "silverware-fork-knife",
+  store: "cart-outline",
+  library: "book-open-variant",
+  repair: "wrench-outline",
+  transport: "bus",
+  workspace: "desk",
+  water: "water-outline",
+  charging: "battery-charging-outline",
+  other: "map-marker-outline",
+};
+
+function formatPlaceMeta(place: Place) {
+  return place.price_hint ? place.price_hint : place.is_free ? "free" : "useful option";
+}
 
 export default function NearbyScreen() {
   const { location, errorMessage, isLoading, requestLocation } = useUserLocation();
+  const {
+    places,
+    errorMessage: placesErrorMessage,
+    isLoading: isLoadingPlaces,
+    fetchPlaces,
+  } = usePlaces();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -42,20 +65,46 @@ export default function NearbyScreen() {
           )}
         </View>
 
-        <MapPreview userLocation={location} height={176} />
+        <MapPreview userLocation={location} places={places} height={176} />
+
+        <View style={styles.dataHeader}>
+          <Text style={styles.dataTitle}>Places from Supabase</Text>
+          {isLoadingPlaces ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <TouchableOpacity style={styles.refreshPlacesButton} activeOpacity={0.75} onPress={fetchPlaces}>
+              <MaterialCommunityIcons name="refresh" size={18} color={colors.primaryDark} />
+              <Text style={styles.refreshPlacesText}>Refresh</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {placesErrorMessage ? (
+          <View style={styles.errorCard}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={22} color={colors.primary} />
+            <Text style={styles.errorText}>{placesErrorMessage}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.list}>
-          {nearbyPlaces.map((place) => (
-            <NearbyCard key={place.name} {...place} />
+          {places.map((place) => (
+            <NearbyCard
+              key={place.id}
+              name={place.name}
+              rating={place.rating ? place.rating.toFixed(1) : "4.5"}
+              detail={place.description}
+              meta={formatPlaceMeta(place)}
+              icon={placeIconMap[place.type]}
+            />
           ))}
         </View>
 
         <View style={styles.infoCard}>
-          <MaterialCommunityIcons name="map-marker-radius-outline" size={28} color={colors.primary} />
+          <MaterialCommunityIcons name="database-check-outline" size={28} color={colors.primary} />
           <View style={styles.infoTextWrap}>
-            <Text style={styles.infoTitle}>Real map added</Text>
+            <Text style={styles.infoTitle}>Supabase connected</Text>
             <Text style={styles.infoText}>
-              Avoryn now asks for location permission and centers the map near you. The places are still demo data.
+              Nearby places now come from the Supabase `places` table. Location and map still work with live device data.
             </Text>
           </View>
         </View>
@@ -134,6 +183,50 @@ const styles = StyleSheet.create({
     height: 38,
     justifyContent: "center",
     width: 38,
+  },
+  dataHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  dataTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  refreshPlacesButton: {
+    alignItems: "center",
+    borderColor: colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 34,
+    paddingHorizontal: 12,
+  },
+  refreshPlacesText: {
+    color: colors.primaryDark,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  errorCard: {
+    alignItems: "center",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 12,
+    padding: 12,
+  },
+  errorText: {
+    color: colors.muted,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
   list: {
     gap: 12,
