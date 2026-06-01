@@ -3,9 +3,11 @@ import MapView, { Marker, Region } from "react-native-maps";
 import { StyleSheet, Text, View } from "react-native";
 import { colors } from "../constants/colors";
 import { UserLocation } from "../hooks/useUserLocation";
+import { Place } from "../lib/supabase";
 
 type MapPreviewProps = {
   userLocation?: UserLocation | null;
+  places?: Place[];
   height?: number;
 };
 
@@ -14,7 +16,47 @@ const defaultLocation: UserLocation = {
   longitude: 24.9384,
 };
 
-function buildRegion(location: UserLocation): Region {
+const placeIconMap: Record<Place["type"], keyof typeof MaterialCommunityIcons.glyphMap> = {
+  food: "silverware-fork-knife",
+  store: "cart-outline",
+  library: "book-open-variant",
+  repair: "wrench-outline",
+  transport: "bus",
+  workspace: "desk",
+  water: "water-outline",
+  charging: "battery-charging-outline",
+  other: "map-marker-outline",
+};
+
+const placeColorMap: Record<Place["type"], string> = {
+  food: colors.success,
+  store: "#F5A623",
+  library: "#3478D6",
+  repair: "#7952B3",
+  transport: colors.primary,
+  workspace: "#3478D6",
+  water: "#279AF1",
+  charging: "#36A269",
+  other: colors.primaryDark,
+};
+
+function buildRegion(location: UserLocation, places: Place[] = []): Region {
+  if (places.length > 0) {
+    const latitudes = [location.latitude, ...places.map((place) => place.latitude)];
+    const longitudes = [location.longitude, ...places.map((place) => place.longitude)];
+    const minLatitude = Math.min(...latitudes);
+    const maxLatitude = Math.max(...latitudes);
+    const minLongitude = Math.min(...longitudes);
+    const maxLongitude = Math.max(...longitudes);
+
+    return {
+      latitude: (minLatitude + maxLatitude) / 2,
+      longitude: (minLongitude + maxLongitude) / 2,
+      latitudeDelta: Math.max(0.012, (maxLatitude - minLatitude) * 1.7),
+      longitudeDelta: Math.max(0.012, (maxLongitude - minLongitude) * 1.7),
+    };
+  }
+
   return {
     latitude: location.latitude,
     longitude: location.longitude,
@@ -23,7 +65,7 @@ function buildRegion(location: UserLocation): Region {
   };
 }
 
-function nearbyMarkers(center: UserLocation) {
+function fallbackMarkers(center: UserLocation) {
   return [
     {
       id: "food",
@@ -58,9 +100,10 @@ function nearbyMarkers(center: UserLocation) {
   ];
 }
 
-export function MapPreview({ userLocation, height = 96 }: MapPreviewProps) {
+export function MapPreview({ userLocation, places = [], height = 96 }: MapPreviewProps) {
   const center = userLocation ?? defaultLocation;
-  const region = buildRegion(center);
+  const region = buildRegion(center, places);
+  const hasPlaces = places.length > 0;
 
   return (
     <View style={[styles.container, { height }]}> 
@@ -77,13 +120,26 @@ export function MapPreview({ userLocation, height = 96 }: MapPreviewProps) {
         rotateEnabled={false}
         pitchEnabled={false}
       >
-        {nearbyMarkers(center).map((marker) => (
-          <Marker key={marker.id} coordinate={marker.coordinate} title={marker.title}>
-            <View style={[styles.marker, { backgroundColor: marker.color }]}> 
-              <MaterialCommunityIcons name={marker.icon} size={15} color={colors.card} />
-            </View>
-          </Marker>
-        ))}
+        {hasPlaces
+          ? places.map((place) => (
+              <Marker
+                key={place.id}
+                coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+                title={place.name}
+                description={place.description}
+              >
+                <View style={[styles.marker, { backgroundColor: placeColorMap[place.type] }]}> 
+                  <MaterialCommunityIcons name={placeIconMap[place.type]} size={15} color={colors.card} />
+                </View>
+              </Marker>
+            ))
+          : fallbackMarkers(center).map((marker) => (
+              <Marker key={marker.id} coordinate={marker.coordinate} title={marker.title}>
+                <View style={[styles.marker, { backgroundColor: marker.color }]}> 
+                  <MaterialCommunityIcons name={marker.icon} size={15} color={colors.card} />
+                </View>
+              </Marker>
+            ))}
 
         {!userLocation ? (
           <Marker coordinate={center} title="Demo location">
@@ -96,7 +152,11 @@ export function MapPreview({ userLocation, height = 96 }: MapPreviewProps) {
 
       {!userLocation ? (
         <View style={styles.demoBadge}>
-          <Text style={styles.demoBadgeText}>Demo map</Text>
+          <Text style={styles.demoBadgeText}>{hasPlaces ? "Supabase data" : "Demo map"}</Text>
+        </View>
+      ) : hasPlaces ? (
+        <View style={styles.demoBadge}>
+          <Text style={styles.demoBadgeText}>Supabase data</Text>
         </View>
       ) : null}
     </View>
