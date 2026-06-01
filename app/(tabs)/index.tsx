@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppHeader } from "../../components/AppHeader";
@@ -10,26 +11,35 @@ import { ScanCallout } from "../../components/ScanCallout";
 import { SearchBox } from "../../components/SearchBox";
 import { SectionTitle } from "../../components/SectionTitle";
 import { colors } from "../../constants/colors";
-import { categoryChips, nearbyPlaces, smarterOptions } from "../../constants/mockData";
+import { categoryChips, ScenarioId, scenarios } from "../../constants/mockData";
 
 export default function AskScreen() {
+  const [activeScenarioId, setActiveScenarioId] = useState<ScenarioId>("buy");
+  const activeScenario = useMemo(() => scenarios[activeScenarioId], [activeScenarioId]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <AppHeader />
-        <SearchBox />
+        <SearchBox query={activeScenario.query} />
 
         <View style={styles.chipRow}>
           {categoryChips.map((chip) => (
-            <CategoryChip key={chip.label} label={chip.label} icon={chip.icon} />
+            <CategoryChip
+              key={chip.id}
+              label={chip.label}
+              icon={chip.icon}
+              isActive={chip.id === activeScenarioId}
+              onPress={() => setActiveScenarioId(chip.id)}
+            />
           ))}
         </View>
 
-        <SavingsPill />
+        <SavingsPill text={activeScenario.savingsText} />
 
         <SectionTitle title="Your smarter options" subtitle="Compared by cost, distance, time and value" />
-        {smarterOptions.map((option) => (
-          <OptionCard key={option.title} {...option} />
+        {activeScenario.options.map((option) => (
+          <OptionCard key={`${activeScenarioId}-${option.title}`} {...option} />
         ))}
 
         <View style={styles.nearbyHeader}>
@@ -39,8 +49,8 @@ export default function AskScreen() {
         <MapPreview />
 
         <View style={styles.nearbyCards}>
-          {nearbyPlaces.map((place) => (
-            <NearbyCard key={place.name} {...place} />
+          {activeScenario.nearby.map((place) => (
+            <NearbyCard key={`${activeScenarioId}-${place.name}`} {...place} />
           ))}
         </View>
 
