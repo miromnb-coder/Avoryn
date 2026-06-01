@@ -37,7 +37,7 @@ export function AvorynTypewriterTitle({ active = true, textStyle }: AvorynTypewr
 
   const currentPhrase = TITLE_PHRASES[phraseIndex];
   const visibleText = currentPhrase.slice(0, visibleLength);
-  const cursor = cursorVisible && active ? "|" : "";
+  const cursorStyle = cursorVisible && active ? styles.cursorVisible : styles.cursorHidden;
 
   useEffect(() => {
     if (!active) {
@@ -114,7 +114,7 @@ export function AvorynTypewriterTitle({ active = true, textStyle }: AvorynTypewr
   return (
     <Text style={[styles.title, textStyle]}>
       {visibleText}
-      <Text style={styles.cursor}>{cursor}</Text>
+      <Text style={[styles.cursor, cursorStyle]}>|</Text>
     </Text>
   );
 }
@@ -132,7 +132,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   cursor: {
-    color: "rgba(24,27,26,0.64)",
     fontWeight: "300",
+  },
+  cursorVisible: {
+    color: "rgba(24,27,26,0.64)",
+  },
+  cursorHidden: {
+    color: "transparent",
   },
 });
