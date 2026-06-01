@@ -16,18 +16,18 @@ export function AvorynComposer() {
 
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.circleButton} activeOpacity={0.68}>
-          <MaterialCommunityIcons name="plus" size={25} color={colors.text} />
+          <MaterialCommunityIcons name="plus" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.rightActions}>
           <TouchableOpacity style={styles.circleButton} activeOpacity={0.68}>
-            <MaterialCommunityIcons name="line-scan" size={18} color={colors.text} />
+            <MaterialCommunityIcons name="line-scan" size={17} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.circleButton} activeOpacity={0.68}>
-            <MaterialCommunityIcons name="microphone-outline" size={21} color={colors.text} />
+            <MaterialCommunityIcons name="microphone-outline" size={20} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.circleButton, styles.disabledSendButton]} activeOpacity={0.68}>
-            <MaterialCommunityIcons name="arrow-up" size={20} color={colors.placeholder} />
+            <MaterialCommunityIcons name="arrow-up" size={19} color={colors.placeholder} />
           </TouchableOpacity>
         </View>
       </View>
@@ -38,51 +38,51 @@ export function AvorynComposer() {
 const styles = StyleSheet.create({
   card: {
     alignSelf: "center",
-    backgroundColor: colors.composer,
-    borderColor: colors.composerBorder,
-    borderRadius: 22,
+    backgroundColor: "#FAFCFA",
+    borderColor: "rgba(7,59,58,0.08)",
+    borderRadius: 21,
     borderWidth: 1,
-    minHeight: 122,
-    paddingBottom: 12,
-    paddingHorizontal: 18,
-    paddingTop: 18,
+    minHeight: 116,
+    paddingBottom: 11,
+    paddingHorizontal: 17,
+    paddingTop: 17,
     shadowColor: "#001E1B",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.055,
-    shadowRadius: 20,
-    width: "94%",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.045,
+    shadowRadius: 18,
+    width: "86%",
   },
   input: {
     color: colors.text,
     flex: 1,
-    fontSize: 19,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 23,
     margin: 0,
-    minHeight: 45,
+    minHeight: 42,
     padding: 0,
   },
   actionRow: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 6,
+    marginTop: 4,
   },
   rightActions: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 8,
+    gap: 7,
   },
   circleButton: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.36)",
-    borderColor: "rgba(24,27,26,0.055)",
+    backgroundColor: "rgba(255,255,255,0.34)",
+    borderColor: "rgba(24,27,26,0.045)",
     borderRadius: 999,
     borderWidth: 1,
-    height: 36,
+    height: 34,
     justifyContent: "center",
-    width: 36,
+    width: 34,
   },
   disabledSendButton: {
-    backgroundColor: "rgba(24,27,26,0.04)",
+    backgroundColor: "rgba(24,27,26,0.035)",
   },
 });
