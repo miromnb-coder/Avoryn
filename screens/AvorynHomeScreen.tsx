@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
@@ -15,8 +15,9 @@ const serifFont = Platform.select({
 const CONVERSATION_COMPOSER_BOTTOM = 18;
 const CONVERSATION_COMPOSER_KEYBOARD_GAP = 8;
 const CONVERSATION_MESSAGES_GAP = 0;
+const INTRO_TO_CONVERSATION_DELAY_MS = 420;
 
-type HomeMode = "intro" | "conversation";
+type HomeMode = "intro" | "transitioning" | "conversation";
 
 type AvorynMessage = {
   id: string;
@@ -30,6 +31,7 @@ function createDemoAnswer(userMessage: string) {
 
 function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
   const insets = useSafeAreaInsets();
+  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [mode, setMode] = useState<HomeMode>("intro");
   const [messages, setMessages] = useState<AvorynMessage[]>([]);
   const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
@@ -40,7 +42,8 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
     CONVERSATION_COMPOSER_KEYBOARD_GAP,
     keyboardHeight - insets.bottom + CONVERSATION_COMPOSER_KEYBOARD_GAP,
   );
-  const conversationComposerBottom = keyboardHeight > 0 ? keyboardComposerBottom : CONVERSATION_COMPOSER_BOTTOM;
+  const shouldLiftConversationComposer = mode === "conversation" && isComposerFocused && keyboardHeight > 0;
+  const conversationComposerBottom = shouldLiftConversationComposer ? keyboardComposerBottom : CONVERSATION_COMPOSER_BOTTOM;
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -61,9 +64,17 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const titleStyle = useMemo(
-    () => [styles.title, { transform: [{ translateY: -composerGrowth }] }],
-    [composerGrowth],
+    () => [styles.title, { transform: [{ translateY: -composerGrowth }] }, mode === "transitioning" && styles.titleHidden],
+    [composerGrowth, mode],
   );
 
   const messagesScrollStyle = useMemo(
@@ -94,8 +105,31 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
       text: createDemoAnswer(message),
     };
 
-    setMode("conversation");
     setMessages((currentMessages) => [...currentMessages, userMessage, avorynMessage]);
+
+    if (mode === "intro") {
+      Keyboard.dismiss();
+      setIsComposerFocused(false);
+      setKeyboardHeight(0);
+      setMode("transitioning");
+
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
+
+      transitionTimeoutRef.current = setTimeout(() => {
+        setMode("conversation");
+        transitionTimeoutRef.current = null;
+      }, INTRO_TO_CONVERSATION_DELAY_MS);
+
+      return;
+    }
+
+    if (mode === "transitioning") {
+      return;
+    }
+
+    setMode("conversation");
   }
 
   return (
@@ -108,7 +142,7 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
         <View style={styles.screen}>
           <AvorynHeader onMenuPress={onMenuPress} />
 
-          {mode === "intro" ? (
+          {mode !== "conversation" ? (
             <View style={styles.hero}>
               <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
               <View style={styles.introComposerSlot}>
@@ -193,6 +227,9 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     marginBottom: 24,
     textAlign: "center",
+  },
+  titleHidden: {
+    opacity: 0,
   },
   introComposerSlot: {
     height: 174,
