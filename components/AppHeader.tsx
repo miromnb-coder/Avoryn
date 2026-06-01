@@ -6,13 +6,13 @@ export function AppHeader() {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-        <MaterialCommunityIcons name="menu" size={26} color={colors.text} />
+        <MaterialCommunityIcons name="menu" size={24} color={colors.text} />
       </TouchableOpacity>
 
       <Text style={styles.logo}>Avoryn</Text>
 
       <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-        <MaterialCommunityIcons name="bell-outline" size={24} color={colors.text} />
+        <MaterialCommunityIcons name="bell-outline" size={23} color={colors.text} />
       </TouchableOpacity>
     </View>
   );
@@ -23,13 +23,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 28,
+    marginBottom: 30,
   },
   iconButton: {
     alignItems: "center",
-    height: 44,
+    height: 40,
     justifyContent: "center",
-    width: 44,
+    width: 40,
   },
   logo: {
     color: colors.primaryDark,
