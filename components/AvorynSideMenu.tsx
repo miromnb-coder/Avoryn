@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors } from "../constants/colors";
+import type { AvorynConversationSummary } from "../types/avorynChat";
 import { avorynHaptics } from "../utils/avorynHaptics";
 
 const serifFont = Platform.select({
@@ -12,19 +13,34 @@ const serifFont = Platform.select({
 const menuItems = [{ icon: "home", label: "Home" }] as const;
 
 type AvorynSideMenuProps = {
+  activeConversationId?: string | null;
+  conversations?: AvorynConversationSummary[];
+  isLoadingConversations?: boolean;
   onNewChat?: () => void;
+  onSelectConversation?: (conversationId: string) => void;
 };
 
-export function AvorynSideMenu({ onNewChat }: AvorynSideMenuProps) {
+export function AvorynSideMenu({
+  activeConversationId,
+  conversations = [],
+  isLoadingConversations = false,
+  onNewChat,
+  onSelectConversation,
+}: AvorynSideMenuProps) {
   function handleNewChatPress() {
     avorynHaptics.select();
     onNewChat?.();
   }
 
+  function handleSelectConversation(conversationId: string) {
+    avorynHaptics.select();
+    onSelectConversation?.(conversationId);
+  }
+
   return (
     <View style={styles.background}>
       <View style={styles.content}>
-        <View>
+        <View style={styles.topContent}>
           <Text style={styles.logo}>Avoryn</Text>
 
           <View style={styles.menuList}>
@@ -36,6 +52,43 @@ export function AvorynSideMenu({ onNewChat }: AvorynSideMenuProps) {
                 <Text style={styles.menuLabel}>{item.label}</Text>
               </Pressable>
             ))}
+          </View>
+
+          <View style={styles.historySection}>
+            <Text style={styles.historyTitle}>Recent chats</Text>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.historyList}>
+              {isLoadingConversations ? (
+                <Text style={styles.historyMuted}>Loading chats…</Text>
+              ) : conversations.length === 0 ? (
+                <Text style={styles.historyMuted}>No chats yet</Text>
+              ) : (
+                conversations.map((conversation) => {
+                  const isActive = conversation.id === activeConversationId;
+
+                  return (
+                    <Pressable
+                      key={conversation.id}
+                      accessibilityRole="button"
+                      onPress={() => handleSelectConversation(conversation.id)}
+                      style={({ pressed }) => [
+                        styles.conversationButton,
+                        isActive && styles.activeConversationButton,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Text
+                        allowFontScaling={false}
+                        numberOfLines={2}
+                        style={[styles.conversationTitle, isActive && styles.activeConversationTitle]}
+                      >
+                        {conversation.title}
+                      </Text>
+                    </Pressable>
+                  );
+                })
+              )}
+            </ScrollView>
           </View>
         </View>
 
@@ -73,6 +126,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 31,
     paddingTop: 88,
   },
+  topContent: {
+    flex: 1,
+    minHeight: 0,
+  },
   logo: {
     color: colors.text,
     fontFamily: serifFont,
@@ -98,6 +155,49 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 22,
     letterSpacing: -0.25,
+  },
+  historySection: {
+    flex: 1,
+    marginTop: 42,
+    minHeight: 0,
+    paddingRight: 52,
+  },
+  historyTitle: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.9,
+    marginBottom: 14,
+    textTransform: "uppercase",
+  },
+  historyList: {
+    paddingBottom: 18,
+  },
+  historyMuted: {
+    color: colors.muted,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  conversationButton: {
+    borderRadius: 16,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  activeConversationButton: {
+    backgroundColor: "rgba(255,255,255,0.58)",
+    borderColor: "rgba(24,27,26,0.055)",
+    borderWidth: 1,
+  },
+  conversationTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "500",
+    letterSpacing: -0.2,
+    lineHeight: 21,
+  },
+  activeConversationTitle: {
+    fontWeight: "700",
   },
   footer: {
     alignItems: "center",
@@ -145,5 +245,9 @@ const styles = StyleSheet.create({
     height: 58,
     justifyContent: "center",
     width: 58,
+  },
+  pressed: {
+    opacity: 0.66,
+    transform: [{ scale: 0.995 }],
   },
 });
