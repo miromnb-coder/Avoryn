@@ -14,10 +14,8 @@ function createMessageId(role: AvorynChatMessage["role"]) {
   return `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function createErrorAnswer(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-
-  return `I could not connect to Avoryn AI right now.\n\n${message}`;
+function createErrorAnswer() {
+  return "Avoryn had trouble answering just now. Try again in a moment.";
 }
 
 export function useAvorynChat() {
@@ -69,7 +67,7 @@ export function useAvorynChat() {
       }
 
       setMessages(nextMessages);
-    } catch (error) {
+    } catch {
       if (sendRunRef.current !== runId) {
         return;
       }
@@ -79,7 +77,7 @@ export function useAvorynChat() {
         {
           id: createMessageId("avoryn"),
           role: "avoryn",
-          text: createErrorAnswer(error),
+          text: createErrorAnswer(),
         },
       ]);
     } finally {
@@ -114,36 +112,36 @@ export function useAvorynChat() {
 
       const nextMessages = [...messages, userMessage];
       const runId = sendRunRef.current + 1;
-      let savedConversationId = activeConversationId;
-      let canSaveConversation = false;
+      let savedConversationId: string | null = activeConversationId;
 
       sendRunRef.current = runId;
 
       setMessages([...nextMessages, avorynMessage]);
       setIsThinking(true);
 
-      try {
-        try {
-          savedConversationId = await getOrCreateAvorynConversation({
-            conversationId: activeConversationId,
-            firstMessage: trimmedMessage,
-          });
+      const historySavePromise = (async () => {
+        const conversationId = await getOrCreateAvorynConversation({
+          conversationId: activeConversationId,
+          firstMessage: trimmedMessage,
+        });
 
-          if (sendRunRef.current !== runId) {
-            return true;
-          }
-
-          canSaveConversation = true;
-          setActiveConversationId(savedConversationId);
-          await saveAvorynUserMessage({
-            content: trimmedMessage,
-            conversationId: savedConversationId,
-          });
-          await refreshConversations();
-        } catch {
-          canSaveConversation = false;
+        if (sendRunRef.current !== runId) {
+          return null;
         }
 
+        savedConversationId = conversationId;
+        setActiveConversationId(conversationId);
+
+        await saveAvorynUserMessage({
+          content: trimmedMessage,
+          conversationId,
+        });
+
+        void refreshConversations();
+        return conversationId;
+      })().catch(() => null);
+
+      try {
         const response = await sendMessageToAvorynAgent({
           messages: nextMessages.map((currentMessage) => ({
             role: currentMessage.role,
@@ -161,41 +159,32 @@ export function useAvorynChat() {
           ),
         );
 
-        if (canSaveConversation && savedConversationId) {
+        const conversationId = (await historySavePromise) ?? savedConversationId;
+
+        if (conversationId && sendRunRef.current === runId) {
           try {
             await saveAvorynAssistantMessage({
               content: response.answer,
-              conversationId: savedConversationId,
+              conversationId,
             });
-            await refreshConversations();
+            void refreshConversations();
           } catch {
             // Keep the answer visible even if history saving fails.
           }
         }
-      } catch (error) {
+      } catch {
         if (sendRunRef.current !== runId) {
           return true;
         }
 
-        const errorAnswer = createErrorAnswer(error);
         avorynHaptics.error();
         setMessages((currentMessages) =>
           currentMessages.map((currentMessage) =>
-            currentMessage.id === avorynMessageId ? { ...currentMessage, text: errorAnswer } : currentMessage,
+            currentMessage.id === avorynMessageId ? { ...currentMessage, text: createErrorAnswer() } : currentMessage,
           ),
         );
 
-        if (canSaveConversation && savedConversationId) {
-          try {
-            await saveAvorynAssistantMessage({
-              content: errorAnswer,
-              conversationId: savedConversationId,
-            });
-            await refreshConversations();
-          } catch {
-            // Keep the error visible even if history saving fails.
-          }
-        }
+        void historySavePromise;
       } finally {
         if (sendRunRef.current === runId) {
           setIsThinking(false);
