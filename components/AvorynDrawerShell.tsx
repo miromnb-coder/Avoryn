@@ -46,7 +46,8 @@ const OPEN_PANEL_CLOSE_THRESHOLD = 0.72;
 const MAIN_CARD_OPEN_RADIUS = 34;
 const MAIN_CARD_OPEN_SCALE = 0.965;
 const PANEL_PARALLAX_OFFSET = 18;
-const OPEN_DISTANCE_RATIO = 0.82;
+const LEFT_OPEN_DISTANCE_RATIO = 0.82;
+const RIGHT_OPEN_DISTANCE_RATIO = 1.02;
 
 const OPEN_TIMING = {
   duration: 330,
@@ -85,7 +86,8 @@ export function AvorynDrawerShell({
   onSelectConversation,
 }: AvorynDrawerShellProps) {
   const { width } = useWindowDimensions();
-  const openDistance = width * OPEN_DISTANCE_RATIO;
+  const leftOpenDistance = width * LEFT_OPEN_DISTANCE_RATIO;
+  const rightOpenDistance = width * RIGHT_OPEN_DISTANCE_RATIO;
   const progress = useSharedValue(0);
   const gestureStartProgress = useSharedValue(0);
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
@@ -176,7 +178,8 @@ export function AvorynDrawerShell({
         return;
       }
 
-      const rawNextProgress = gestureStartProgress.value + event.translationX / openDistance;
+      const dragDistance = gestureStartProgress.value < -0.5 || event.translationX < 0 ? rightOpenDistance : leftOpenDistance;
+      const rawNextProgress = gestureStartProgress.value + event.translationX / dragDistance;
 
       if (gestureStartProgress.value > 0.5) {
         progress.value = clamp(rawNextProgress, 0, 1);
@@ -254,12 +257,13 @@ export function AvorynDrawerShell({
   const mainCardAnimatedStyle = useAnimatedStyle(() => {
     const absoluteProgress = Math.abs(progress.value);
     const scale = 1 - absoluteProgress * (1 - MAIN_CARD_OPEN_SCALE);
+    const translateX = progress.value >= 0 ? progress.value * leftOpenDistance : progress.value * rightOpenDistance;
 
     return {
       shadowOpacity: absoluteProgress * 0.18,
       shadowRadius: 30 * absoluteProgress,
       transform: [
-        { translateX: progress.value * openDistance },
+        { translateX },
         { scale },
       ],
     };
