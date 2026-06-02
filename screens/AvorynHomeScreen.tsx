@@ -79,6 +79,13 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
     setKeyboardHeight(0);
   }
 
+  function handleNewChat() {
+    dismissKeyboard();
+    chat.startNewChat();
+    setMode("intro");
+    setComposerHeight(AVORYN_COMPOSER_MIN_HEIGHT);
+  }
+
   function handleSend(message: string) {
     const trimmedMessage = message.trim();
 
@@ -92,80 +99,84 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
   }
 
   return (
-    <ImageBackground
-      source={require("../assets/backgrounds/avoryn-background.PNG")}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.screen}>
-            <AvorynHeader onMenuPress={onMenuPress} />
+    <AvorynDrawerShell onNewChat={handleNewChat}>
+      {({ openDrawer }) => (
+        <ImageBackground
+          source={require("../assets/backgrounds/avoryn-background.PNG")}
+          style={styles.background}
+          resizeMode="cover"
+        >
+          <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
+            <SafeAreaView style={styles.safeArea}>
+              <View style={styles.screen}>
+                <AvorynHeader onMenuPress={onMenuPress ?? openDrawer} />
 
-            {mode !== "conversation" ? (
-              <View style={styles.hero}>
-                <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
-                <View style={styles.introComposerSlot}>
-                  <AvorynComposer
-                    onBlur={() => setIsComposerFocused(false)}
-                    onFocus={() => setIsComposerFocused(true)}
-                    onHeightChange={setComposerHeight}
-                    onSend={handleSend}
-                  />
-                </View>
+                {mode !== "conversation" ? (
+                  <View style={styles.hero}>
+                    <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
+                    <View style={styles.introComposerSlot}>
+                      <AvorynComposer
+                        onBlur={() => setIsComposerFocused(false)}
+                        onFocus={() => setIsComposerFocused(true)}
+                        onHeightChange={setComposerHeight}
+                        onSend={handleSend}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.conversationScreen}>
+                    <ScrollView
+                      style={messagesScrollStyle}
+                      contentContainerStyle={styles.messagesContent}
+                      keyboardShouldPersistTaps="handled"
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {chat.messages.map((message) => {
+                        if (message.role === "user") {
+                          return (
+                            <View key={message.id} style={styles.userMessageWrap}>
+                              <Text style={styles.userMessageText}>{message.text}</Text>
+                            </View>
+                          );
+                        }
+
+                        if (!message.text && chat.isThinking) {
+                          return (
+                            <Text key={message.id} style={styles.thinkingText}>
+                              Thinking through the best option…
+                            </Text>
+                          );
+                        }
+
+                        return (
+                          <Text key={message.id} style={styles.avorynMessageText}>
+                            {message.text}
+                          </Text>
+                        );
+                      })}
+                    </ScrollView>
+
+                    <View style={conversationComposerStyle}>
+                      <AvorynComposer
+                        onBlur={() => setIsComposerFocused(false)}
+                        onFocus={() => setIsComposerFocused(true)}
+                        onHeightChange={setComposerHeight}
+                        onSend={handleSend}
+                      />
+                    </View>
+                  </View>
+                )}
               </View>
-            ) : (
-              <View style={styles.conversationScreen}>
-                <ScrollView
-                  style={messagesScrollStyle}
-                  contentContainerStyle={styles.messagesContent}
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                >
-                  {chat.messages.map((message) => {
-                    if (message.role === "user") {
-                      return (
-                        <View key={message.id} style={styles.userMessageWrap}>
-                          <Text style={styles.userMessageText}>{message.text}</Text>
-                        </View>
-                      );
-                    }
-
-                    if (!message.text && chat.isThinking) {
-                      return (
-                        <Text key={message.id} style={styles.thinkingText}>
-                          Thinking through the best option…
-                        </Text>
-                      );
-                    }
-
-                    return (
-                      <Text key={message.id} style={styles.avorynMessageText}>
-                        {message.text}
-                      </Text>
-                    );
-                  })}
-                </ScrollView>
-
-                <View style={conversationComposerStyle}>
-                  <AvorynComposer
-                    onBlur={() => setIsComposerFocused(false)}
-                    onFocus={() => setIsComposerFocused(true)}
-                    onHeightChange={setComposerHeight}
-                    onSend={handleSend}
-                  />
-                </View>
-              </View>
-            )}
-          </View>
-        </SafeAreaView>
-      </TouchableWithoutFeedback>
-    </ImageBackground>
+            </SafeAreaView>
+          </TouchableWithoutFeedback>
+        </ImageBackground>
+      )}
+    </AvorynDrawerShell>
   );
 }
 
 export function AvorynHomeScreen() {
-  return <AvorynDrawerShell>{({ openDrawer }) => <AvorynHomeContent onMenuPress={openDrawer} />}</AvorynDrawerShell>;
+  return <AvorynHomeContent onMenuPress={() => undefined} />;
 }
 
 const styles = StyleSheet.create({
