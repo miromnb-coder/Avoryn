@@ -1,0 +1,4 @@
+project_id = "mdmxeimjtomnhymfikfr"
+
+[functions.avoryn-agent]
+verify_jwt = true
