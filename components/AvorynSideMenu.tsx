@@ -79,7 +79,8 @@ export function AvorynSideMenu({
                     >
                       <Text
                         allowFontScaling={false}
-                        numberOfLines={2}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
                         style={[styles.conversationTitle, isActive && styles.activeConversationTitle]}
                       >
                         {conversation.title}
@@ -180,9 +181,9 @@ const styles = StyleSheet.create({
   },
   conversationButton: {
     borderRadius: 16,
-    marginBottom: 8,
+    marginBottom: 7,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
   activeConversationButton: {
     backgroundColor: "rgba(255,255,255,0.58)",
@@ -191,10 +192,10 @@ const styles = StyleSheet.create({
   },
   conversationTitle: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "500",
-    letterSpacing: -0.2,
-    lineHeight: 21,
+    letterSpacing: -0.18,
+    lineHeight: 20,
   },
   activeConversationTitle: {
     fontWeight: "700",
