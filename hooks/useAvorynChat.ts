@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { sendMessageToAvorynAgent } from "../services/avorynAgentClient";
+import { sendMessageToAvorynAgent, streamMessageToAvorynAgent } from "../services/avorynAgentClient";
 import {
   fetchAvorynConversationMessages,
   fetchAvorynConversations,
@@ -111,6 +111,12 @@ export function useAvorynChat() {
       };
 
       const nextMessages = [...messages, userMessage];
+      const agentInput = {
+        messages: nextMessages.map((currentMessage) => ({
+          role: currentMessage.role,
+          content: currentMessage.text,
+        })),
+      };
       const runId = sendRunRef.current + 1;
       let savedConversationId: string | null = activeConversationId;
 
@@ -142,20 +148,46 @@ export function useAvorynChat() {
       })().catch(() => null);
 
       try {
-        const response = await sendMessageToAvorynAgent({
-          messages: nextMessages.map((currentMessage) => ({
-            role: currentMessage.role,
-            content: currentMessage.text,
-          })),
+        let streamedAnswer = "";
+
+        let response = await streamMessageToAvorynAgent(agentInput, {
+          onDelta(delta) {
+            if (sendRunRef.current !== runId) {
+              return;
+            }
+
+            streamedAnswer += delta;
+            setMessages((currentMessages) =>
+              currentMessages.map((currentMessage) =>
+                currentMessage.id === avorynMessageId
+                  ? { ...currentMessage, text: `${currentMessage.text}${delta}` }
+                  : currentMessage,
+              ),
+            );
+          },
+        }).catch(async () => {
+          streamedAnswer = "";
+          setMessages((currentMessages) =>
+            currentMessages.map((currentMessage) =>
+              currentMessage.id === avorynMessageId ? { ...currentMessage, text: "" } : currentMessage,
+            ),
+          );
+          return sendMessageToAvorynAgent(agentInput);
         });
 
         if (sendRunRef.current !== runId) {
           return true;
         }
 
+        const finalAnswer = response.answer.trim() || streamedAnswer.trim();
+
+        if (!finalAnswer) {
+          throw new Error("Empty Avoryn answer");
+        }
+
         setMessages((currentMessages) =>
           currentMessages.map((currentMessage) =>
-            currentMessage.id === avorynMessageId ? { ...currentMessage, text: response.answer } : currentMessage,
+            currentMessage.id === avorynMessageId ? { ...currentMessage, text: finalAnswer } : currentMessage,
           ),
         );
 
@@ -164,7 +196,7 @@ export function useAvorynChat() {
         if (conversationId && sendRunRef.current === runId) {
           try {
             await saveAvorynAssistantMessage({
-              content: response.answer,
+              content: finalAnswer,
               conversationId,
             });
             void refreshConversations();
