@@ -18,6 +18,8 @@ type StreamEventPayload = {
   error?: unknown;
 };
 
+const STREAM_TIMEOUT_MS = 60000;
+
 function toEdgeRole(role: SendAvorynAgentMessageInput["messages"][number]["role"]) {
   return role === "avoryn" ? "assistant" : "user";
 }
@@ -99,16 +101,16 @@ function parseStreamEvent(eventText: string) {
   }
 }
 
-async function readErrorResponse(response: Response) {
+function readXhrError(xhr: XMLHttpRequest) {
   try {
-    const payload = (await response.json()) as { detail?: unknown; error?: unknown; message?: unknown };
+    const payload = JSON.parse(xhr.responseText || "{}") as { detail?: unknown; error?: unknown; message?: unknown };
     const error = typeof payload.error === "string" ? payload.error : null;
     const detail = typeof payload.detail === "string" ? payload.detail : null;
     const message = typeof payload.message === "string" ? payload.message : null;
 
     return detail ?? error ?? message ?? "Avoryn stream request failed.";
   } catch {
-    return (await response.text().catch(() => "")) || "Avoryn stream request failed.";
+    return xhr.responseText?.trim() || "Avoryn stream request failed.";
   }
 }
 
@@ -121,56 +123,51 @@ export async function streamMessageToAvorynAgent(
   }
 
   const accessToken = await getAccessToken();
-  const response = await fetch(`${supabaseUrl}/functions/v1/avoryn-agent`, {
-    method: "POST",
-    headers: {
-      Accept: "text/event-stream",
-      apikey: supabasePublishableKey,
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messages: toEdgeMessages(input),
-      stream: true,
-    }),
-  });
 
-  if (!response.ok) {
-    throw new Error(await readErrorResponse(response));
-  }
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    let lastIndex = 0;
+    let buffer = "";
+    let answer = "";
+    let settled = false;
 
-  const reader = response.body?.getReader?.();
+    function settleWithError(error: Error) {
+      if (settled) {
+        return;
+      }
 
-  if (!reader) {
-    throw new Error("Streaming is not available on this device.");
-  }
-
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let answer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-
-    if (done) {
-      break;
+      settled = true;
+      reject(error);
     }
 
-    buffer += decoder.decode(value, { stream: true });
-    const events = buffer.split("\n\n");
-    buffer = events.pop() ?? "";
+    function settleWithAnswer() {
+      if (settled) {
+        return;
+      }
 
-    for (const eventText of events) {
+      const finalAnswer = answer.trim();
+
+      if (!finalAnswer) {
+        settleWithError(new Error("Avoryn returned an empty streamed answer."));
+        return;
+      }
+
+      settled = true;
+      resolve({ answer: finalAnswer, provider: "supabase-edge" });
+    }
+
+    function consumeEvent(eventText: string) {
       const event = parseStreamEvent(eventText);
 
       if (!event) {
-        continue;
+        return;
       }
 
       if (event.eventName === "error") {
         const error = typeof event.payload.error === "string" ? event.payload.error : "Avoryn stream failed.";
         const detail = typeof event.payload.detail === "string" ? event.payload.detail : null;
-        throw new Error(detail ?? error);
+        settleWithError(new Error(detail ?? error));
+        return;
       }
 
       if (event.eventName === "delta" && typeof event.payload.delta === "string") {
@@ -180,20 +177,57 @@ export async function streamMessageToAvorynAgent(
 
       if (event.eventName === "done" && typeof event.payload.answer === "string") {
         answer = event.payload.answer;
+        settleWithAnswer();
       }
     }
-  }
 
-  const finalAnswer = answer.trim();
+    function consumePendingText() {
+      const nextText = xhr.responseText.slice(lastIndex);
+      lastIndex = xhr.responseText.length;
 
-  if (!finalAnswer) {
-    throw new Error("Avoryn returned an empty streamed answer.");
-  }
+      if (!nextText) {
+        return;
+      }
 
-  return {
-    answer: finalAnswer,
-    provider: "supabase-edge",
-  };
+      buffer += nextText;
+      const events = buffer.split("\n\n");
+      buffer = events.pop() ?? "";
+      events.forEach(consumeEvent);
+    }
+
+    xhr.open("POST", `${supabaseUrl}/functions/v1/avoryn-agent`);
+    xhr.timeout = STREAM_TIMEOUT_MS;
+    xhr.setRequestHeader("Accept", "text/event-stream");
+    xhr.setRequestHeader("apikey", supabasePublishableKey);
+    xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.onprogress = consumePendingText;
+    xhr.onerror = () => settleWithError(new Error("Avoryn stream request failed."));
+    xhr.ontimeout = () => settleWithError(new Error("Avoryn stream timed out."));
+    xhr.onload = () => {
+      if (xhr.status < 200 || xhr.status >= 300) {
+        settleWithError(new Error(readXhrError(xhr)));
+        return;
+      }
+
+      consumePendingText();
+
+      if (buffer.trim()) {
+        consumeEvent(buffer);
+        buffer = "";
+      }
+
+      settleWithAnswer();
+    };
+
+    xhr.send(
+      JSON.stringify({
+        messages: toEdgeMessages(input),
+        stream: true,
+      }),
+    );
+  });
 }
 
 export async function sendMessageToAvorynAgent(input: SendAvorynAgentMessageInput): Promise<AvorynAgentResponse> {
