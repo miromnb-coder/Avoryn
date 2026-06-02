@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
@@ -16,13 +16,11 @@ const serifFont = Platform.select({
 const CONVERSATION_COMPOSER_BOTTOM = 18;
 const CONVERSATION_COMPOSER_KEYBOARD_GAP = 8;
 const CONVERSATION_MESSAGES_GAP = 0;
-const INTRO_TO_CONVERSATION_DELAY_MS = 420;
 
-type HomeMode = "intro" | "transitioning" | "conversation";
+type HomeMode = "intro" | "conversation";
 
 function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
   const insets = useSafeAreaInsets();
-  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chat = useAvorynChat();
   const [mode, setMode] = useState<HomeMode>("intro");
   const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
@@ -55,17 +53,9 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
     };
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const titleStyle = useMemo(
-    () => [styles.title, { transform: [{ translateY: -composerGrowth }] }, mode === "transitioning" && styles.titleHidden],
-    [composerGrowth, mode],
+    () => [styles.title, { transform: [{ translateY: -composerGrowth }] }],
+    [composerGrowth],
   );
 
   const messagesScrollStyle = useMemo(
@@ -83,36 +73,22 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
     [conversationComposerBottom],
   );
 
-  async function handleSend(message: string) {
-    const sent = await chat.sendMessage(message);
+  function dismissKeyboard() {
+    Keyboard.dismiss();
+    setIsComposerFocused(false);
+    setKeyboardHeight(0);
+  }
 
-    if (!sent) {
+  function handleSend(message: string) {
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage || chat.isThinking) {
       return;
     }
 
-    if (mode === "intro") {
-      Keyboard.dismiss();
-      setIsComposerFocused(false);
-      setKeyboardHeight(0);
-      setMode("transitioning");
-
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
-      }
-
-      transitionTimeoutRef.current = setTimeout(() => {
-        setMode("conversation");
-        transitionTimeoutRef.current = null;
-      }, INTRO_TO_CONVERSATION_DELAY_MS);
-
-      return;
-    }
-
-    if (mode === "transitioning") {
-      return;
-    }
-
+    dismissKeyboard();
     setMode("conversation");
+    void chat.sendMessage(trimmedMessage);
   }
 
   return (
@@ -121,67 +97,69 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
       style={styles.background}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.screen}>
-          <AvorynHeader onMenuPress={onMenuPress} />
+      <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.screen}>
+            <AvorynHeader onMenuPress={onMenuPress} />
 
-          {mode !== "conversation" ? (
-            <View style={styles.hero}>
-              <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
-              <View style={styles.introComposerSlot}>
-                <AvorynComposer
-                  onBlur={() => setIsComposerFocused(false)}
-                  onFocus={() => setIsComposerFocused(true)}
-                  onHeightChange={setComposerHeight}
-                  onSend={handleSend}
-                />
+            {mode !== "conversation" ? (
+              <View style={styles.hero}>
+                <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
+                <View style={styles.introComposerSlot}>
+                  <AvorynComposer
+                    onBlur={() => setIsComposerFocused(false)}
+                    onFocus={() => setIsComposerFocused(true)}
+                    onHeightChange={setComposerHeight}
+                    onSend={handleSend}
+                  />
+                </View>
               </View>
-            </View>
-          ) : (
-            <View style={styles.conversationScreen}>
-              <ScrollView
-                style={messagesScrollStyle}
-                contentContainerStyle={styles.messagesContent}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-              >
-                {chat.messages.map((message) => {
-                  if (message.role === "user") {
-                    return (
-                      <View key={message.id} style={styles.userMessageWrap}>
-                        <Text style={styles.userMessageText}>{message.text}</Text>
-                      </View>
-                    );
-                  }
+            ) : (
+              <View style={styles.conversationScreen}>
+                <ScrollView
+                  style={messagesScrollStyle}
+                  contentContainerStyle={styles.messagesContent}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                >
+                  {chat.messages.map((message) => {
+                    if (message.role === "user") {
+                      return (
+                        <View key={message.id} style={styles.userMessageWrap}>
+                          <Text style={styles.userMessageText}>{message.text}</Text>
+                        </View>
+                      );
+                    }
 
-                  if (!message.text && chat.isThinking) {
+                    if (!message.text && chat.isThinking) {
+                      return (
+                        <Text key={message.id} style={styles.thinkingText}>
+                          Thinking through the best option…
+                        </Text>
+                      );
+                    }
+
                     return (
-                      <Text key={message.id} style={styles.thinkingText}>
-                        Thinking through the best option…
+                      <Text key={message.id} style={styles.avorynMessageText}>
+                        {message.text}
                       </Text>
                     );
-                  }
+                  })}
+                </ScrollView>
 
-                  return (
-                    <Text key={message.id} style={styles.avorynMessageText}>
-                      {message.text}
-                    </Text>
-                  );
-                })}
-              </ScrollView>
-
-              <View style={conversationComposerStyle}>
-                <AvorynComposer
-                  onBlur={() => setIsComposerFocused(false)}
-                  onFocus={() => setIsComposerFocused(true)}
-                  onHeightChange={setComposerHeight}
-                  onSend={handleSend}
-                />
+                <View style={conversationComposerStyle}>
+                  <AvorynComposer
+                    onBlur={() => setIsComposerFocused(false)}
+                    onFocus={() => setIsComposerFocused(true)}
+                    onHeightChange={setComposerHeight}
+                    onSend={handleSend}
+                  />
+                </View>
               </View>
-            </View>
-          )}
-        </View>
-      </SafeAreaView>
+            )}
+          </View>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
     </ImageBackground>
   );
 }
@@ -218,9 +196,6 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     marginBottom: 24,
     textAlign: "center",
-  },
-  titleHidden: {
-    opacity: 0,
   },
   introComposerSlot: {
     height: 174,
