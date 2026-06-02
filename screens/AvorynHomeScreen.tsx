@@ -18,6 +18,7 @@ const CONVERSATION_COMPOSER_KEYBOARD_GAP = 8;
 const CONVERSATION_MESSAGES_GAP = 0;
 const CONVERSATION_MESSAGES_BOTTOM_PADDING = 34;
 const SCROLL_TO_END_DELAY_MS = 80;
+const USER_SCROLL_RESET_DELAY_MS = 650;
 
 type HomeMode = "intro" | "conversation";
 
@@ -26,6 +27,8 @@ function AvorynHomeContent() {
   const chat = useAvorynChat();
   const messagesScrollRef = useRef<ScrollView | null>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userScrollResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isUserScrollingMessagesRef = useRef(false);
   const [mode, setMode] = useState<HomeMode>("intro");
   const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
   const [isComposerFocused, setIsComposerFocused] = useState(false);
@@ -63,18 +66,57 @@ function AvorynHomeContent() {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
+
+      if (userScrollResetTimeoutRef.current) {
+        clearTimeout(userScrollResetTimeoutRef.current);
+      }
     };
   }, []);
 
-  function scrollMessagesToEnd(animated = true) {
+  function scrollMessagesToEnd(animated = true, force = false) {
+    if (!force && isUserScrollingMessagesRef.current) {
+      return;
+    }
+
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
 
     scrollTimeoutRef.current = setTimeout(() => {
-      messagesScrollRef.current?.scrollToEnd({ animated });
+      if (force || !isUserScrollingMessagesRef.current) {
+        messagesScrollRef.current?.scrollToEnd({ animated });
+      }
+
       scrollTimeoutRef.current = null;
     }, SCROLL_TO_END_DELAY_MS);
+  }
+
+  function resetUserScrollingSoon() {
+    if (userScrollResetTimeoutRef.current) {
+      clearTimeout(userScrollResetTimeoutRef.current);
+    }
+
+    userScrollResetTimeoutRef.current = setTimeout(() => {
+      isUserScrollingMessagesRef.current = false;
+      userScrollResetTimeoutRef.current = null;
+    }, USER_SCROLL_RESET_DELAY_MS);
+  }
+
+  function handleMessagesScrollBeginDrag() {
+    isUserScrollingMessagesRef.current = true;
+
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = null;
+    }
+
+    Keyboard.dismiss();
+    setIsComposerFocused(false);
+    setKeyboardHeight(0);
+  }
+
+  function handleMessagesScrollEndDrag() {
+    resetUserScrollingSoon();
   }
 
   useEffect(() => {
@@ -135,10 +177,11 @@ function AvorynHomeContent() {
       return;
     }
 
+    isUserScrollingMessagesRef.current = false;
     dismissKeyboard();
     setMode("conversation");
     void chat.sendMessage(trimmedMessage);
-    scrollMessagesToEnd(false);
+    scrollMessagesToEnd(false, true);
   }
 
   return (
@@ -156,12 +199,12 @@ function AvorynHomeContent() {
           style={styles.background}
           resizeMode="cover"
         >
-          <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
-            <SafeAreaView style={styles.safeArea}>
-              <View style={styles.screen}>
-                <AvorynHeader onMenuPress={openDrawer} />
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.screen}>
+              <AvorynHeader onMenuPress={openDrawer} />
 
-                {mode !== "conversation" ? (
+              {mode !== "conversation" ? (
+                <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
                   <View style={styles.hero}>
                     <Text style={titleStyle}>What are you{`\n`}trying to do?</Text>
                     <View style={styles.introComposerSlot}>
@@ -173,58 +216,64 @@ function AvorynHomeContent() {
                       />
                     </View>
                   </View>
-                ) : (
-                  <View style={styles.conversationScreen}>
-                    <ScrollView
-                      ref={messagesScrollRef}
-                      style={messagesScrollStyle}
-                      contentContainerStyle={styles.messagesContent}
-                      keyboardShouldPersistTaps="handled"
-                      onContentSizeChange={() => scrollMessagesToEnd(true)}
-                      showsVerticalScrollIndicator={false}
-                    >
-                      {chat.isLoadingConversation ? (
-                        <Text style={styles.thinkingText}>Opening conversation…</Text>
-                      ) : (
-                        chat.messages.map((message) => {
-                          if (message.role === "user") {
-                            return (
-                              <View key={message.id} style={styles.userMessageWrap}>
-                                <Text style={styles.userMessageText}>{message.text}</Text>
-                              </View>
-                            );
-                          }
-
-                          if (!message.text && chat.isThinking) {
-                            return (
-                              <Text key={message.id} style={styles.thinkingText}>
-                                Thinking through the best option…
-                              </Text>
-                            );
-                          }
-
+                </TouchableWithoutFeedback>
+              ) : (
+                <View style={styles.conversationScreen}>
+                  <ScrollView
+                    ref={messagesScrollRef}
+                    style={messagesScrollStyle}
+                    contentContainerStyle={styles.messagesContent}
+                    keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+                    keyboardShouldPersistTaps="handled"
+                    nestedScrollEnabled
+                    onContentSizeChange={() => scrollMessagesToEnd(true)}
+                    onMomentumScrollEnd={resetUserScrollingSoon}
+                    onScrollBeginDrag={handleMessagesScrollBeginDrag}
+                    onScrollEndDrag={handleMessagesScrollEndDrag}
+                    scrollEventThrottle={16}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {chat.isLoadingConversation ? (
+                      <Text style={styles.thinkingText}>Opening conversation…</Text>
+                    ) : (
+                      chat.messages.map((message) => {
+                        if (message.role === "user") {
                           return (
-                            <Text key={message.id} style={styles.avorynMessageText}>
-                              {message.text}
+                            <View key={message.id} style={styles.userMessageWrap}>
+                              <Text style={styles.userMessageText}>{message.text}</Text>
+                            </View>
+                          );
+                        }
+
+                        if (!message.text && chat.isThinking) {
+                          return (
+                            <Text key={message.id} style={styles.thinkingText}>
+                              Thinking through the best option…
                             </Text>
                           );
-                        })
-                      )}
-                    </ScrollView>
+                        }
 
-                    <View style={conversationComposerStyle}>
-                      <AvorynComposer
-                        onBlur={() => setIsComposerFocused(false)}
-                        onFocus={() => setIsComposerFocused(true)}
-                        onHeightChange={setComposerHeight}
-                        onSend={handleSend}
-                      />
-                    </View>
+                        return (
+                          <Text key={message.id} style={styles.avorynMessageText}>
+                            {message.text}
+                          </Text>
+                        );
+                      })
+                    )}
+                  </ScrollView>
+
+                  <View style={conversationComposerStyle}>
+                    <AvorynComposer
+                      onBlur={() => setIsComposerFocused(false)}
+                      onFocus={() => setIsComposerFocused(true)}
+                      onHeightChange={setComposerHeight}
+                      onSend={handleSend}
+                    />
                   </View>
-                )}
-              </View>
-            </SafeAreaView>
-          </TouchableWithoutFeedback>
+                </View>
+              )}
+            </View>
+          </SafeAreaView>
         </ImageBackground>
       )}
     </AvorynDrawerShell>
