@@ -27,6 +27,7 @@ type AvorynDrawerShellProps = {
   gesturesEnabled?: boolean;
   isLoadingConversations?: boolean;
   onNewChat?: () => void;
+  onOpenDrawer?: () => void;
   onSelectConversation?: (conversationId: string) => void;
 };
 
@@ -73,6 +74,7 @@ export function AvorynDrawerShell({
   gesturesEnabled = true,
   isLoadingConversations = false,
   onNewChat,
+  onOpenDrawer,
   onSelectConversation,
 }: AvorynDrawerShellProps) {
   const { width } = useWindowDimensions();
@@ -96,10 +98,11 @@ export function AvorynDrawerShell({
 
   const openDrawer = useCallback(() => {
     Keyboard.dismiss();
+    onOpenDrawer?.();
     avorynHaptics.openMenu();
     setIsDrawerOpen(true);
     progress.value = withTiming(1, OPEN_TIMING);
-  }, [progress]);
+  }, [onOpenDrawer, progress]);
 
   const closeDrawer = useCallback(() => {
     avorynHaptics.closeMenu();
