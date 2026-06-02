@@ -3,6 +3,7 @@ export const colors = {
   card: "#FFFFFF",
   composer: "#F6FBF8",
   composerBorder: "#DDECE4",
+  drawerBackground: "rgba(255,255,255,0.78)",
   primary: "#0F5C5A",
   primaryDark: "#073B3A",
   text: "#181B1A",
