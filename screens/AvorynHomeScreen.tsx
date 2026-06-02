@@ -5,6 +5,7 @@ import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/Avoryn
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
 import { AvorynHeader } from "../components/AvorynHeader";
 import { colors } from "../constants/colors";
+import { useAvorynChat } from "../hooks/useAvorynChat";
 
 const serifFont = Platform.select({
   ios: "Georgia",
@@ -19,21 +20,11 @@ const INTRO_TO_CONVERSATION_DELAY_MS = 420;
 
 type HomeMode = "intro" | "transitioning" | "conversation";
 
-type AvorynMessage = {
-  id: string;
-  role: "user" | "avoryn";
-  text: string;
-};
-
-function createDemoAnswer(userMessage: string) {
-  return `I can help you make a better everyday decision.\n\nFor this, I would compare three things first: what saves you money, what saves you time, and what gives you the best overall value.\n\nBased on “${userMessage}”, the smartest next step is to look for a low-cost option nearby before choosing the fastest one.`;
-}
-
 function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
   const insets = useSafeAreaInsets();
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chat = useAvorynChat();
   const [mode, setMode] = useState<HomeMode>("intro");
-  const [messages, setMessages] = useState<AvorynMessage[]>([]);
   const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
   const [isComposerFocused, setIsComposerFocused] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -92,20 +83,12 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
     [conversationComposerBottom],
   );
 
-  function handleSend(message: string) {
-    const userMessage: AvorynMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      text: message,
-    };
+  async function handleSend(message: string) {
+    const sent = await chat.sendMessage(message);
 
-    const avorynMessage: AvorynMessage = {
-      id: `avoryn-${Date.now()}`,
-      role: "avoryn",
-      text: createDemoAnswer(message),
-    };
-
-    setMessages((currentMessages) => [...currentMessages, userMessage, avorynMessage]);
+    if (!sent) {
+      return;
+    }
 
     if (mode === "intro") {
       Keyboard.dismiss();
@@ -162,12 +145,20 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
               >
-                {messages.map((message) => {
+                {chat.messages.map((message) => {
                   if (message.role === "user") {
                     return (
                       <View key={message.id} style={styles.userMessageWrap}>
                         <Text style={styles.userMessageText}>{message.text}</Text>
                       </View>
+                    );
+                  }
+
+                  if (!message.text && chat.isThinking) {
+                    return (
+                      <Text key={message.id} style={styles.thinkingText}>
+                        Thinking through the best option…
+                      </Text>
                     );
                   }
 
@@ -275,6 +266,16 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     letterSpacing: -0.45,
     lineHeight: 34,
+    marginBottom: 28,
+    maxWidth: "94%",
+  },
+  thinkingText: {
+    color: "rgba(24,27,26,0.58)",
+    fontFamily: serifFont,
+    fontSize: 22,
+    fontWeight: "400",
+    letterSpacing: -0.3,
+    lineHeight: 30,
     marginBottom: 28,
     maxWidth: "94%",
   },
