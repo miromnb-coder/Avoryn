@@ -6,6 +6,12 @@ export type AvorynChatMessage = {
   text: string;
 };
 
+export type AvorynConversationSummary = {
+  id: string;
+  title: string;
+  updatedAt: string;
+};
+
 export type AvorynAgentMessage = {
   role: AvorynChatRole;
   content: string;
