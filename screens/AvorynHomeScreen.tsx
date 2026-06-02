@@ -84,12 +84,18 @@ function AvorynHomeContent() {
     chat.startNewChat();
     setMode("intro");
     setComposerHeight(AVORYN_COMPOSER_MIN_HEIGHT);
+    void chat.refreshConversations();
   }
 
   function handleSelectConversation(conversationId: string) {
     dismissKeyboard();
     setMode("conversation");
     void chat.selectConversation(conversationId);
+  }
+
+  function handleOpenDrawer() {
+    dismissKeyboard();
+    void chat.refreshConversations();
   }
 
   function handleSend(message: string) {
@@ -110,6 +116,7 @@ function AvorynHomeContent() {
       conversations={chat.conversations}
       isLoadingConversations={chat.isLoadingConversations}
       onNewChat={handleNewChat}
+      onOpenDrawer={handleOpenDrawer}
       onSelectConversation={handleSelectConversation}
     >
       {({ openDrawer }) => (
