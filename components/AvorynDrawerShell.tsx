@@ -12,11 +12,18 @@ import Animated, {
 import type { AvorynConversationSummary } from "../types/avorynChat";
 import { avorynHaptics } from "../utils/avorynHaptics";
 import { AvorynSideMenu } from "./AvorynSideMenu";
+import { AvorynTravelCockpit } from "./AvorynTravelCockpit";
+
+type ActivePanel = "left" | "right" | null;
 
 type DrawerControls = {
   closeDrawer: () => void;
+  closePanels: () => void;
+  isCockpitOpen: boolean;
   isDrawerOpen: boolean;
+  openCockpit: () => void;
   openDrawer: () => void;
+  toggleCockpit: () => void;
   toggleDrawer: () => void;
 };
 
@@ -35,10 +42,9 @@ const DRAG_ACTIVATION_DISTANCE = 8;
 const HORIZONTAL_DOMINANCE = 1.18;
 const SWIPE_VELOCITY = 720;
 const OPEN_PROGRESS_THRESHOLD = 0.34;
-const CLOSE_PROGRESS_THRESHOLD = 0.64;
 const MAIN_CARD_OPEN_RADIUS = 34;
 const MAIN_CARD_OPEN_SCALE = 0.965;
-const DRAWER_PARALLAX_OFFSET = 18;
+const PANEL_PARALLAX_OFFSET = 18;
 const OPEN_DISTANCE_RATIO = 0.82;
 
 const OPEN_TIMING = {
@@ -81,14 +87,16 @@ export function AvorynDrawerShell({
   const openDistance = width * OPEN_DISTANCE_RATIO;
   const progress = useSharedValue(0);
   const gestureStartProgress = useSharedValue(0);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const isDrawerOpen = activePanel === "left";
+  const isCockpitOpen = activePanel === "right";
 
-  const setOpenState = useCallback((open: boolean) => {
-    setIsDrawerOpen(open);
+  const setPanelState = useCallback((panel: ActivePanel) => {
+    setActivePanel(panel);
   }, []);
 
-  const triggerDrawerHaptic = useCallback((open: boolean) => {
-    if (open) {
+  const triggerPanelHaptic = useCallback((panel: ActivePanel) => {
+    if (panel) {
       avorynHaptics.openMenu();
       return;
     }
@@ -96,44 +104,62 @@ export function AvorynDrawerShell({
     avorynHaptics.closeMenu();
   }, []);
 
+  const closePanels = useCallback(() => {
+    avorynHaptics.closeMenu();
+    progress.value = withTiming(0, CLOSE_TIMING, (finished) => {
+      if (finished) {
+        runOnJS(setPanelState)(null);
+      }
+    });
+  }, [progress, setPanelState]);
+
   const openDrawer = useCallback(() => {
     Keyboard.dismiss();
     onOpenDrawer?.();
     avorynHaptics.openMenu();
-    setIsDrawerOpen(true);
+    setActivePanel("left");
     progress.value = withTiming(1, OPEN_TIMING);
   }, [onOpenDrawer, progress]);
 
-  const closeDrawer = useCallback(() => {
-    avorynHaptics.closeMenu();
-    progress.value = withTiming(0, CLOSE_TIMING, (finished) => {
-      if (finished) {
-        runOnJS(setOpenState)(false);
-      }
-    });
-  }, [progress, setOpenState]);
+  const openCockpit = useCallback(() => {
+    Keyboard.dismiss();
+    avorynHaptics.openMenu();
+    setActivePanel("right");
+    progress.value = withTiming(-1, OPEN_TIMING);
+  }, [progress]);
+
+  const closeDrawer = closePanels;
 
   const handleNewChat = useCallback(() => {
     onNewChat?.();
-    closeDrawer();
-  }, [closeDrawer, onNewChat]);
+    closePanels();
+  }, [closePanels, onNewChat]);
 
   const handleSelectConversation = useCallback(
     (conversationId: string) => {
       onSelectConversation?.(conversationId);
-      closeDrawer();
+      closePanels();
     },
-    [closeDrawer, onSelectConversation],
+    [closePanels, onSelectConversation],
   );
 
   const toggleDrawer = useCallback(() => {
     if (isDrawerOpen) {
-      closeDrawer();
+      closePanels();
       return;
     }
 
     openDrawer();
-  }, [closeDrawer, isDrawerOpen, openDrawer]);
+  }, [closePanels, isDrawerOpen, openDrawer]);
+
+  const toggleCockpit = useCallback(() => {
+    if (isCockpitOpen) {
+      closePanels();
+      return;
+    }
+
+    openCockpit();
+  }, [closePanels, isCockpitOpen, openCockpit]);
 
   const panGesture = Gesture.Pan()
     .enabled(gesturesEnabled)
@@ -150,41 +176,64 @@ export function AvorynDrawerShell({
       }
 
       const nextProgress = gestureStartProgress.value + event.translationX / openDistance;
-      progress.value = clamp(nextProgress, 0, 1);
+      progress.value = clamp(nextProgress, -1, 1);
 
       if (progress.value > 0.02) {
-        runOnJS(setOpenState)(true);
+        runOnJS(setPanelState)("left");
+      }
+
+      if (progress.value < -0.02) {
+        runOnJS(setPanelState)("right");
       }
     })
     .onEnd((event) => {
-      const shouldOpen =
-        event.velocityX > SWIPE_VELOCITY ||
-        (event.velocityX > -SWIPE_VELOCITY && progress.value > OPEN_PROGRESS_THRESHOLD);
-      const shouldClose =
-        event.velocityX < -SWIPE_VELOCITY ||
-        (event.velocityX < SWIPE_VELOCITY && progress.value < CLOSE_PROGRESS_THRESHOLD);
-      const nextOpen = progress.value > 0.5 ? !shouldClose : shouldOpen;
+      let targetProgress = 0;
+      let nextPanel: ActivePanel = null;
 
-      runOnJS(triggerDrawerHaptic)(nextOpen);
+      if (event.velocityX > SWIPE_VELOCITY || progress.value > OPEN_PROGRESS_THRESHOLD) {
+        targetProgress = 1;
+        nextPanel = "left";
+      }
 
-      progress.value = withTiming(nextOpen ? 1 : 0, nextOpen ? SETTLE_OPEN_TIMING : SETTLE_CLOSE_TIMING, (finished) => {
+      if (event.velocityX < -SWIPE_VELOCITY || progress.value < -OPEN_PROGRESS_THRESHOLD) {
+        targetProgress = -1;
+        nextPanel = "right";
+      }
+
+      runOnJS(triggerPanelHaptic)(nextPanel);
+
+      progress.value = withTiming(targetProgress, nextPanel ? SETTLE_OPEN_TIMING : SETTLE_CLOSE_TIMING, (finished) => {
         if (finished) {
-          runOnJS(setOpenState)(nextOpen);
+          runOnJS(setPanelState)(nextPanel);
         }
       });
     });
 
-  const drawerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: 0.86 + progress.value * 0.14,
-    transform: [{ translateX: (progress.value - 1) * DRAWER_PARALLAX_OFFSET }],
-  }));
-
-  const mainCardAnimatedStyle = useAnimatedStyle(() => {
-    const scale = 1 - progress.value * (1 - MAIN_CARD_OPEN_SCALE);
+  const leftPanelAnimatedStyle = useAnimatedStyle(() => {
+    const leftProgress = Math.max(progress.value, 0);
 
     return {
-      shadowOpacity: progress.value * 0.18,
-      shadowRadius: 30 * progress.value,
+      opacity: 0.86 + leftProgress * 0.14,
+      transform: [{ translateX: (leftProgress - 1) * PANEL_PARALLAX_OFFSET }],
+    };
+  });
+
+  const rightPanelAnimatedStyle = useAnimatedStyle(() => {
+    const rightProgress = Math.max(-progress.value, 0);
+
+    return {
+      opacity: 0.86 + rightProgress * 0.14,
+      transform: [{ translateX: (1 - rightProgress) * PANEL_PARALLAX_OFFSET }],
+    };
+  });
+
+  const mainCardAnimatedStyle = useAnimatedStyle(() => {
+    const absoluteProgress = Math.abs(progress.value);
+    const scale = 1 - absoluteProgress * (1 - MAIN_CARD_OPEN_SCALE);
+
+    return {
+      shadowOpacity: absoluteProgress * 0.18,
+      shadowRadius: 30 * absoluteProgress,
       transform: [
         { translateX: progress.value * openDistance },
         { scale },
@@ -193,18 +242,29 @@ export function AvorynDrawerShell({
   });
 
   const mainScreenAnimatedStyle = useAnimatedStyle(() => {
-    const radius = progress.value * MAIN_CARD_OPEN_RADIUS;
+    const leftRadius = Math.max(progress.value, 0) * MAIN_CARD_OPEN_RADIUS;
+    const rightRadius = Math.max(-progress.value, 0) * MAIN_CARD_OPEN_RADIUS;
 
     return {
-      borderTopLeftRadius: radius,
-      borderBottomLeftRadius: radius,
+      borderTopLeftRadius: leftRadius,
+      borderBottomLeftRadius: leftRadius,
+      borderTopRightRadius: rightRadius,
+      borderBottomRightRadius: rightRadius,
+    };
+  });
+
+  const mainCardShadowStyle = useAnimatedStyle(() => {
+    const shadowOffsetX = progress.value < 0 ? 8 : -8;
+
+    return {
+      shadowOffset: { width: shadowOffsetX, height: 0 },
     };
   });
 
   return (
     <GestureDetector gesture={panGesture}>
       <View style={styles.shell}>
-        <Animated.View style={[styles.drawer, drawerAnimatedStyle]}>
+        <Animated.View style={[styles.leftPanel, leftPanelAnimatedStyle]}>
           <AvorynSideMenu
             activeConversationId={activeConversationId}
             conversations={conversations}
@@ -214,16 +274,29 @@ export function AvorynDrawerShell({
           />
         </Animated.View>
 
-        <Animated.View pointerEvents="box-none" style={[styles.mainCard, mainCardAnimatedStyle]}>
+        <Animated.View style={[styles.rightPanel, rightPanelAnimatedStyle]}>
+          <AvorynTravelCockpit />
+        </Animated.View>
+
+        <Animated.View pointerEvents="box-none" style={[styles.mainCard, mainCardAnimatedStyle, mainCardShadowStyle]}>
           <Animated.View style={[styles.mainScreen, mainScreenAnimatedStyle]}>
-            {children({ closeDrawer, isDrawerOpen, openDrawer, toggleDrawer })}
+            {children({
+              closeDrawer,
+              closePanels,
+              isCockpitOpen,
+              isDrawerOpen,
+              openCockpit,
+              openDrawer,
+              toggleCockpit,
+              toggleDrawer,
+            })}
           </Animated.View>
 
-          {isDrawerOpen ? (
+          {activePanel ? (
             <Pressable
-              accessibilityLabel="Close menu"
+              accessibilityLabel="Close panel"
               accessibilityRole="button"
-              onPress={closeDrawer}
+              onPress={closePanels}
               style={styles.closeLayer}
             />
           ) : null}
@@ -239,10 +312,15 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: "hidden",
   },
-  drawer: {
+  leftPanel: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "#F5F8F2",
     zIndex: 10,
+  },
+  rightPanel: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#F5F8F2",
+    zIndex: 20,
   },
   mainCard: {
     ...StyleSheet.absoluteFillObject,
