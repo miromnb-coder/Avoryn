@@ -19,7 +19,7 @@ const CONVERSATION_MESSAGES_GAP = 0;
 
 type HomeMode = "intro" | "conversation";
 
-function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
+function AvorynHomeContent() {
   const insets = useSafeAreaInsets();
   const chat = useAvorynChat();
   const [mode, setMode] = useState<HomeMode>("intro");
@@ -109,7 +109,7 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
           <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
             <SafeAreaView style={styles.safeArea}>
               <View style={styles.screen}>
-                <AvorynHeader onMenuPress={onMenuPress ?? openDrawer} />
+                <AvorynHeader onMenuPress={openDrawer} />
 
                 {mode !== "conversation" ? (
                   <View style={styles.hero}>
@@ -176,7 +176,7 @@ function AvorynHomeContent({ onMenuPress }: { onMenuPress: () => void }) {
 }
 
 export function AvorynHomeScreen() {
-  return <AvorynHomeContent onMenuPress={() => undefined} />;
+  return <AvorynHomeContent />;
 }
 
 const styles = StyleSheet.create({
