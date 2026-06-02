@@ -42,6 +42,7 @@ const DRAG_ACTIVATION_DISTANCE = 8;
 const HORIZONTAL_DOMINANCE = 1.18;
 const SWIPE_VELOCITY = 720;
 const OPEN_PROGRESS_THRESHOLD = 0.34;
+const OPEN_PANEL_CLOSE_THRESHOLD = 0.72;
 const MAIN_CARD_OPEN_RADIUS = 34;
 const MAIN_CARD_OPEN_SCALE = 0.965;
 const PANEL_PARALLAX_OFFSET = 18;
@@ -175,27 +176,50 @@ export function AvorynDrawerShell({
         return;
       }
 
-      const nextProgress = gestureStartProgress.value + event.translationX / openDistance;
-      progress.value = clamp(nextProgress, -1, 1);
+      const rawNextProgress = gestureStartProgress.value + event.translationX / openDistance;
+
+      if (gestureStartProgress.value > 0.5) {
+        progress.value = clamp(rawNextProgress, 0, 1);
+        runOnJS(setPanelState)(progress.value > 0.02 ? "left" : null);
+        return;
+      }
+
+      if (gestureStartProgress.value < -0.5) {
+        progress.value = clamp(rawNextProgress, -1, 0);
+        runOnJS(setPanelState)(progress.value < -0.02 ? "right" : null);
+        return;
+      }
+
+      progress.value = clamp(rawNextProgress, -1, 1);
 
       if (progress.value > 0.02) {
         runOnJS(setPanelState)("left");
+        return;
       }
 
       if (progress.value < -0.02) {
         runOnJS(setPanelState)("right");
+        return;
       }
+
+      runOnJS(setPanelState)(null);
     })
     .onEnd((event) => {
       let targetProgress = 0;
       let nextPanel: ActivePanel = null;
 
-      if (event.velocityX > SWIPE_VELOCITY || progress.value > OPEN_PROGRESS_THRESHOLD) {
+      if (gestureStartProgress.value > 0.5) {
+        const shouldStayOpen = event.velocityX > SWIPE_VELOCITY || progress.value > OPEN_PANEL_CLOSE_THRESHOLD;
+        targetProgress = shouldStayOpen ? 1 : 0;
+        nextPanel = shouldStayOpen ? "left" : null;
+      } else if (gestureStartProgress.value < -0.5) {
+        const shouldStayOpen = event.velocityX < -SWIPE_VELOCITY || progress.value < -OPEN_PANEL_CLOSE_THRESHOLD;
+        targetProgress = shouldStayOpen ? -1 : 0;
+        nextPanel = shouldStayOpen ? "right" : null;
+      } else if (event.velocityX > SWIPE_VELOCITY || progress.value > OPEN_PROGRESS_THRESHOLD) {
         targetProgress = 1;
         nextPanel = "left";
-      }
-
-      if (event.velocityX < -SWIPE_VELOCITY || progress.value < -OPEN_PROGRESS_THRESHOLD) {
+      } else if (event.velocityX < -SWIPE_VELOCITY || progress.value < -OPEN_PROGRESS_THRESHOLD) {
         targetProgress = -1;
         nextPanel = "right";
       }
@@ -213,7 +237,7 @@ export function AvorynDrawerShell({
     const leftProgress = Math.max(progress.value, 0);
 
     return {
-      opacity: 0.86 + leftProgress * 0.14,
+      opacity: leftProgress,
       transform: [{ translateX: (leftProgress - 1) * PANEL_PARALLAX_OFFSET }],
     };
   });
@@ -222,7 +246,7 @@ export function AvorynDrawerShell({
     const rightProgress = Math.max(-progress.value, 0);
 
     return {
-      opacity: 0.86 + rightProgress * 0.14,
+      opacity: rightProgress,
       transform: [{ translateX: (1 - rightProgress) * PANEL_PARALLAX_OFFSET }],
     };
   });
@@ -264,19 +288,23 @@ export function AvorynDrawerShell({
   return (
     <GestureDetector gesture={panGesture}>
       <View style={styles.shell}>
-        <Animated.View style={[styles.leftPanel, leftPanelAnimatedStyle]}>
-          <AvorynSideMenu
-            activeConversationId={activeConversationId}
-            conversations={conversations}
-            isLoadingConversations={isLoadingConversations}
-            onNewChat={handleNewChat}
-            onSelectConversation={handleSelectConversation}
-          />
-        </Animated.View>
+        {activePanel !== "right" ? (
+          <Animated.View style={[styles.leftPanel, leftPanelAnimatedStyle]}>
+            <AvorynSideMenu
+              activeConversationId={activeConversationId}
+              conversations={conversations}
+              isLoadingConversations={isLoadingConversations}
+              onNewChat={handleNewChat}
+              onSelectConversation={handleSelectConversation}
+            />
+          </Animated.View>
+        ) : null}
 
-        <Animated.View style={[styles.rightPanel, rightPanelAnimatedStyle]}>
-          <AvorynTravelCockpit />
-        </Animated.View>
+        {activePanel !== "left" ? (
+          <Animated.View style={[styles.rightPanel, rightPanelAnimatedStyle]}>
+            <AvorynTravelCockpit />
+          </Animated.View>
+        ) : null}
 
         <Animated.View pointerEvents="box-none" style={[styles.mainCard, mainCardAnimatedStyle, mainCardShadowStyle]}>
           <Animated.View style={[styles.mainScreen, mainScreenAnimatedStyle]}>
@@ -320,7 +348,7 @@ const styles = StyleSheet.create({
   rightPanel: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "#F5F8F2",
-    zIndex: 20,
+    zIndex: 10,
   },
   mainCard: {
     ...StyleSheet.absoluteFillObject,
