@@ -48,6 +48,7 @@ export function useAvorynChat() {
     sendRunRef.current += 1;
     setActiveConversationId(null);
     setMessages([]);
+    setIsLoadingConversation(false);
     setIsThinking(false);
   }, []);
 
@@ -58,6 +59,7 @@ export function useAvorynChat() {
     setIsThinking(false);
     setIsLoadingConversation(true);
     setActiveConversationId(conversationId);
+    setMessages([]);
 
     try {
       const nextMessages = await fetchAvorynConversationMessages(conversationId);
@@ -91,7 +93,7 @@ export function useAvorynChat() {
     async (message: string) => {
       const trimmedMessage = message.trim();
 
-      if (!trimmedMessage || isThinking) {
+      if (!trimmedMessage || isThinking || isLoadingConversation) {
         return false;
       }
 
@@ -202,7 +204,7 @@ export function useAvorynChat() {
 
       return true;
     },
-    [activeConversationId, isThinking, messages, refreshConversations],
+    [activeConversationId, isLoadingConversation, isThinking, messages, refreshConversations],
   );
 
   useEffect(() => {
