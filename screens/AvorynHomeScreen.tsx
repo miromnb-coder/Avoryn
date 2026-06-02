@@ -86,10 +86,16 @@ function AvorynHomeContent() {
     setComposerHeight(AVORYN_COMPOSER_MIN_HEIGHT);
   }
 
+  function handleSelectConversation(conversationId: string) {
+    dismissKeyboard();
+    setMode("conversation");
+    void chat.selectConversation(conversationId);
+  }
+
   function handleSend(message: string) {
     const trimmedMessage = message.trim();
 
-    if (!trimmedMessage || chat.isThinking) {
+    if (!trimmedMessage || chat.isThinking || chat.isLoadingConversation) {
       return;
     }
 
@@ -99,7 +105,13 @@ function AvorynHomeContent() {
   }
 
   return (
-    <AvorynDrawerShell onNewChat={handleNewChat}>
+    <AvorynDrawerShell
+      activeConversationId={chat.activeConversationId}
+      conversations={chat.conversations}
+      isLoadingConversations={chat.isLoadingConversations}
+      onNewChat={handleNewChat}
+      onSelectConversation={handleSelectConversation}
+    >
       {({ openDrawer }) => (
         <ImageBackground
           source={require("../assets/backgrounds/avoryn-background.PNG")}
@@ -131,29 +143,33 @@ function AvorynHomeContent() {
                       keyboardShouldPersistTaps="handled"
                       showsVerticalScrollIndicator={false}
                     >
-                      {chat.messages.map((message) => {
-                        if (message.role === "user") {
-                          return (
-                            <View key={message.id} style={styles.userMessageWrap}>
-                              <Text style={styles.userMessageText}>{message.text}</Text>
-                            </View>
-                          );
-                        }
+                      {chat.isLoadingConversation ? (
+                        <Text style={styles.thinkingText}>Opening conversation…</Text>
+                      ) : (
+                        chat.messages.map((message) => {
+                          if (message.role === "user") {
+                            return (
+                              <View key={message.id} style={styles.userMessageWrap}>
+                                <Text style={styles.userMessageText}>{message.text}</Text>
+                              </View>
+                            );
+                          }
 
-                        if (!message.text && chat.isThinking) {
+                          if (!message.text && chat.isThinking) {
+                            return (
+                              <Text key={message.id} style={styles.thinkingText}>
+                                Thinking through the best option…
+                              </Text>
+                            );
+                          }
+
                           return (
-                            <Text key={message.id} style={styles.thinkingText}>
-                              Thinking through the best option…
+                            <Text key={message.id} style={styles.avorynMessageText}>
+                              {message.text}
                             </Text>
                           );
-                        }
-
-                        return (
-                          <Text key={message.id} style={styles.avorynMessageText}>
-                            {message.text}
-                          </Text>
-                        );
-                      })}
+                        })
+                      )}
                     </ScrollView>
 
                     <View style={conversationComposerStyle}>
