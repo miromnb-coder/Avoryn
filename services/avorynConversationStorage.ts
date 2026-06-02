@@ -25,20 +25,30 @@ type SaveMessageInput = {
   role: AvorynChatRole;
 };
 
-const MAX_TITLE_CHARS = 54;
+const MAX_TITLE_CHARS = 28;
+const MAX_TITLE_WORDS = 5;
 
 function createConversationTitle(message: string) {
-  const cleanMessage = message.replace(/\s+/g, " ").trim();
+  const cleanMessage = message
+    .replace(/[\r\n]+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/[!?.,:;]+$/g, "")
+    .trim();
 
   if (!cleanMessage) {
     return "New chat";
   }
 
-  if (cleanMessage.length <= MAX_TITLE_CHARS) {
-    return cleanMessage;
-  }
+  const words = cleanMessage.split(" ").filter(Boolean).slice(0, MAX_TITLE_WORDS);
+  const wordTitle = words.join(" ");
+  const baseTitle = wordTitle.length > MAX_TITLE_CHARS ? wordTitle.slice(0, MAX_TITLE_CHARS - 1).trim() : wordTitle;
+  const shouldTruncate = cleanMessage.length > baseTitle.length;
 
-  return `${cleanMessage.slice(0, MAX_TITLE_CHARS - 1).trim()}…`;
+  return shouldTruncate ? `${baseTitle}…` : baseTitle;
+}
+
+function normalizeStoredTitle(title: string | null) {
+  return createConversationTitle(title?.trim() || "New chat");
 }
 
 async function getCurrentUserId() {
@@ -78,7 +88,7 @@ export async function fetchAvorynConversations(): Promise<AvorynConversationSumm
 
   return ((data ?? []) as ConversationRow[]).map((conversation) => ({
     id: conversation.id,
-    title: conversation.title?.trim() || "New chat",
+    title: normalizeStoredTitle(conversation.title),
     updatedAt: conversation.last_message_at ?? conversation.updated_at ?? "",
   }));
 }
