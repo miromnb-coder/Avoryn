@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
 import { AvorynDrawerShell } from "../components/AvorynDrawerShell";
 import { AvorynHeader } from "../components/AvorynHeader";
+import { AvorynRichMessage } from "../components/AvorynRichMessage";
 import { colors } from "../constants/colors";
 import { useAvorynChat } from "../hooks/useAvorynChat";
 
@@ -253,11 +254,7 @@ function AvorynHomeContent() {
                           );
                         }
 
-                        return (
-                          <Text key={message.id} style={styles.avorynMessageText}>
-                            {message.text}
-                          </Text>
-                        );
+                        return <AvorynRichMessage key={message.id} text={message.text} />;
                       })
                     )}
                   </ScrollView>
@@ -349,16 +346,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 17,
     lineHeight: 23,
-  },
-  avorynMessageText: {
-    color: colors.text,
-    fontFamily: serifFont,
-    fontSize: 22,
-    fontWeight: "400",
-    letterSpacing: -0.35,
-    lineHeight: 30,
-    marginBottom: 26,
-    maxWidth: "94%",
   },
   thinkingText: {
     color: "rgba(24,27,26,0.58)",
