@@ -1,5 +1,10 @@
+import { AvorynAuthGate } from "../../components/auth/AvorynAuthGate";
 import { AvorynHomeScreen } from "../../screens/AvorynHomeScreen";
 
 export default function AskScreen() {
-  return <AvorynHomeScreen />;
+  return (
+    <AvorynAuthGate>
+      <AvorynHomeScreen />
+    </AvorynAuthGate>
+  );
 }
