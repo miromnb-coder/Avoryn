@@ -11,7 +11,16 @@ const serifFont = Platform.select({
 
 const menuItems = [{ icon: "home", label: "Home" }] as const;
 
-export function AvorynSideMenu() {
+type AvorynSideMenuProps = {
+  onNewChat?: () => void;
+};
+
+export function AvorynSideMenu({ onNewChat }: AvorynSideMenuProps) {
+  function handleNewChatPress() {
+    avorynHaptics.select();
+    onNewChat?.();
+  }
+
   return (
     <View style={styles.background}>
       <View style={styles.content}>
@@ -38,7 +47,12 @@ export function AvorynSideMenu() {
             <Text style={styles.profileName}>Miro</Text>
           </Pressable>
 
-          <Pressable style={styles.newChatButton} onPress={avorynHaptics.select}>
+          <Pressable
+            accessibilityLabel="Start a new chat"
+            accessibilityRole="button"
+            style={styles.newChatButton}
+            onPress={handleNewChatPress}
+          >
             <Feather name="edit-3" size={26} color={colors.text} />
           </Pressable>
         </View>
