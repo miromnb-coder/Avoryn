@@ -6,8 +6,8 @@ import { createClient } from "@supabase/supabase-js";
 const fallbackSupabaseUrl = "https://mdmxeimjtomnhymfikfr.supabase.co";
 const fallbackSupabasePublishableKey = "sb_publishable_d8fWhE5LXyTOxBGh8Ht07w_o4fG4dO2";
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || fallbackSupabaseUrl;
-const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || fallbackSupabasePublishableKey;
+export const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || fallbackSupabaseUrl;
+export const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || fallbackSupabasePublishableKey;
 
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabasePublishableKey);
 
