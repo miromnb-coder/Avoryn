@@ -49,7 +49,7 @@ export function AvorynSideMenu() {
 
 const styles = StyleSheet.create({
   background: {
-    backgroundColor: "rgba(255,255,255,0.78)",
+    backgroundColor: colors.drawerBackground,
     flex: 1,
   },
   content: {
