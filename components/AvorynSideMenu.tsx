@@ -45,7 +45,7 @@ export function AvorynSideMenu({
 
           <View style={styles.menuList}>
             {menuItems.map((item) => (
-              <Pressable key={item.label} style={styles.menuItem} onPress={avorynHaptics.select}>
+              <Pressable key={item.label} style={styles.menuItem} onPress={handleNewChatPress}>
                 <View style={styles.menuIconWrap}>
                   <Feather name={item.icon} size={28} color={colors.text} />
                 </View>
