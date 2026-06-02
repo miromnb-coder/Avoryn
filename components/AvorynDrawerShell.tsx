@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import type { AvorynConversationSummary } from "../types/avorynChat";
 import { avorynHaptics } from "../utils/avorynHaptics";
 import { AvorynSideMenu } from "./AvorynSideMenu";
 
@@ -20,9 +21,13 @@ type DrawerControls = {
 };
 
 type AvorynDrawerShellProps = {
+  activeConversationId?: string | null;
   children: (controls: DrawerControls) => ReactNode;
+  conversations?: AvorynConversationSummary[];
   gesturesEnabled?: boolean;
+  isLoadingConversations?: boolean;
   onNewChat?: () => void;
+  onSelectConversation?: (conversationId: string) => void;
 };
 
 const DRAG_ACTIVATION_DISTANCE = 8;
@@ -61,7 +66,15 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-export function AvorynDrawerShell({ children, gesturesEnabled = true, onNewChat }: AvorynDrawerShellProps) {
+export function AvorynDrawerShell({
+  activeConversationId,
+  children,
+  conversations = [],
+  gesturesEnabled = true,
+  isLoadingConversations = false,
+  onNewChat,
+  onSelectConversation,
+}: AvorynDrawerShellProps) {
   const { width } = useWindowDimensions();
   const openDistance = width * OPEN_DISTANCE_RATIO;
   const progress = useSharedValue(0);
@@ -101,6 +114,14 @@ export function AvorynDrawerShell({ children, gesturesEnabled = true, onNewChat 
     onNewChat?.();
     closeDrawer();
   }, [closeDrawer, onNewChat]);
+
+  const handleSelectConversation = useCallback(
+    (conversationId: string) => {
+      onSelectConversation?.(conversationId);
+      closeDrawer();
+    },
+    [closeDrawer, onSelectConversation],
+  );
 
   const toggleDrawer = useCallback(() => {
     if (isDrawerOpen) {
@@ -181,7 +202,13 @@ export function AvorynDrawerShell({ children, gesturesEnabled = true, onNewChat 
     <GestureDetector gesture={panGesture}>
       <View style={styles.shell}>
         <Animated.View style={[styles.drawer, drawerAnimatedStyle]}>
-          <AvorynSideMenu onNewChat={handleNewChat} />
+          <AvorynSideMenu
+            activeConversationId={activeConversationId}
+            conversations={conversations}
+            isLoadingConversations={isLoadingConversations}
+            onNewChat={handleNewChat}
+            onSelectConversation={handleSelectConversation}
+          />
         </Animated.View>
 
         <Animated.View pointerEvents="box-none" style={[styles.mainCard, mainCardAnimatedStyle]}>
