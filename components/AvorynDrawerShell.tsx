@@ -22,6 +22,7 @@ type DrawerControls = {
 type AvorynDrawerShellProps = {
   children: (controls: DrawerControls) => ReactNode;
   gesturesEnabled?: boolean;
+  onNewChat?: () => void;
 };
 
 const DRAG_ACTIVATION_DISTANCE = 8;
@@ -60,7 +61,7 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-export function AvorynDrawerShell({ children, gesturesEnabled = true }: AvorynDrawerShellProps) {
+export function AvorynDrawerShell({ children, gesturesEnabled = true, onNewChat }: AvorynDrawerShellProps) {
   const { width } = useWindowDimensions();
   const openDistance = width * OPEN_DISTANCE_RATIO;
   const progress = useSharedValue(0);
@@ -95,6 +96,11 @@ export function AvorynDrawerShell({ children, gesturesEnabled = true }: AvorynDr
       }
     });
   }, [progress, setOpenState]);
+
+  const handleNewChat = useCallback(() => {
+    onNewChat?.();
+    closeDrawer();
+  }, [closeDrawer, onNewChat]);
 
   const toggleDrawer = useCallback(() => {
     if (isDrawerOpen) {
@@ -175,7 +181,7 @@ export function AvorynDrawerShell({ children, gesturesEnabled = true }: AvorynDr
     <GestureDetector gesture={panGesture}>
       <View style={styles.shell}>
         <Animated.View style={[styles.drawer, drawerAnimatedStyle]}>
-          <AvorynSideMenu />
+          <AvorynSideMenu onNewChat={handleNewChat} />
         </Animated.View>
 
         <Animated.View pointerEvents="box-none" style={[styles.mainCard, mainCardAnimatedStyle]}>
