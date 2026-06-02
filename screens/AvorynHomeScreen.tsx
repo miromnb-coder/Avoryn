@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ImageBackground, Keyboard, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AvorynComposer, AVORYN_COMPOSER_MIN_HEIGHT } from "../components/AvorynComposer";
@@ -16,12 +16,16 @@ const serifFont = Platform.select({
 const CONVERSATION_COMPOSER_BOTTOM = 18;
 const CONVERSATION_COMPOSER_KEYBOARD_GAP = 8;
 const CONVERSATION_MESSAGES_GAP = 0;
+const CONVERSATION_MESSAGES_BOTTOM_PADDING = 34;
+const SCROLL_TO_END_DELAY_MS = 80;
 
 type HomeMode = "intro" | "conversation";
 
 function AvorynHomeContent() {
   const insets = useSafeAreaInsets();
   const chat = useAvorynChat();
+  const messagesScrollRef = useRef<ScrollView | null>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [mode, setMode] = useState<HomeMode>("intro");
   const [composerHeight, setComposerHeight] = useState(AVORYN_COMPOSER_MIN_HEIGHT);
   const [isComposerFocused, setIsComposerFocused] = useState(false);
@@ -33,6 +37,7 @@ function AvorynHomeContent() {
   );
   const shouldLiftConversationComposer = mode === "conversation" && isComposerFocused && keyboardHeight > 0;
   const conversationComposerBottom = shouldLiftConversationComposer ? keyboardComposerBottom : CONVERSATION_COMPOSER_BOTTOM;
+  const latestMessageText = chat.messages.at(-1)?.text ?? "";
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -52,6 +57,31 @@ function AvorynHomeContent() {
       hideSubscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  function scrollMessagesToEnd(animated = true) {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      messagesScrollRef.current?.scrollToEnd({ animated });
+      scrollTimeoutRef.current = null;
+    }, SCROLL_TO_END_DELAY_MS);
+  }
+
+  useEffect(() => {
+    if (mode === "conversation") {
+      scrollMessagesToEnd(true);
+    }
+  }, [mode, chat.messages.length, latestMessageText, chat.isThinking, chat.isLoadingConversation, conversationComposerBottom, composerHeight]);
 
   const titleStyle = useMemo(
     () => [styles.title, { transform: [{ translateY: -composerGrowth }] }],
@@ -108,6 +138,7 @@ function AvorynHomeContent() {
     dismissKeyboard();
     setMode("conversation");
     void chat.sendMessage(trimmedMessage);
+    scrollMessagesToEnd(false);
   }
 
   return (
@@ -145,9 +176,11 @@ function AvorynHomeContent() {
                 ) : (
                   <View style={styles.conversationScreen}>
                     <ScrollView
+                      ref={messagesScrollRef}
                       style={messagesScrollStyle}
                       contentContainerStyle={styles.messagesContent}
                       keyboardShouldPersistTaps="handled"
+                      onContentSizeChange={() => scrollMessagesToEnd(true)}
                       showsVerticalScrollIndicator={false}
                     >
                       {chat.isLoadingConversation ? (
@@ -249,7 +282,7 @@ const styles = StyleSheet.create({
   messagesContent: {
     flexGrow: 1,
     justifyContent: "flex-end",
-    paddingBottom: 0,
+    paddingBottom: CONVERSATION_MESSAGES_BOTTOM_PADDING,
     paddingTop: 4,
   },
   userMessageWrap: {
