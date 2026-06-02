@@ -21,4 +21,7 @@ export const avorynHaptics = {
   success() {
     return safelyRunHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
   },
+  error() {
+    return safelyRunHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
+  },
 };
