@@ -7,6 +7,10 @@ type AvorynAgentEdgeResponse = AvorynAgentResponse & {
   message?: string;
 };
 
+function toEdgeRole(role: SendAvorynAgentMessageInput["messages"][number]["role"]) {
+  return role === "avoryn" ? "assistant" : "user";
+}
+
 async function getFunctionErrorMessage(error: unknown) {
   const fallback = error instanceof Error ? error.message : "Avoryn agent request failed.";
   const context = (error as { context?: { json?: () => Promise<unknown>; text?: () => Promise<string> } })?.context;
@@ -63,7 +67,7 @@ export async function sendMessageToAvorynAgent(input: SendAvorynAgentMessageInpu
   const { data, error } = await supabase.functions.invoke<AvorynAgentEdgeResponse>("avoryn-agent", {
     body: {
       messages: input.messages.map((message) => ({
-        role: message.role,
+        role: toEdgeRole(message.role),
         content: message.content,
       })),
     },
